@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Companies - Business Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50">
+    <!-- Primary Navigation -->
+    <nav class="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center gap-2 font-bold text-lg">
+                    <i data-lucide="bar-chart-3" class="w-6 h-6 text-blue-600"></i>
+                    <span class="text-slate-900">Business Analyzer</span>
+                </a>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="/dashboard/search" class="text-slate-600 hover:text-slate-900 transition font-medium">Search</a>
+                    <a href="/dashboard/watchlist" class="text-slate-600 hover:text-slate-900 transition font-medium">Watchlist</a>
+                    <a href="/dashboard/news" class="text-slate-600 hover:text-slate-900 transition font-medium">Insights</a>
+                    <a href="/dashboard" class="text-slate-600 hover:text-slate-900 transition font-medium">Dashboard</a>
+                    <!-- User Dropdown -->
+                    <div class="relative" id="userDropdown">
+                        <button onclick="toggleUserDropdown()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition font-medium text-slate-900">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                            <span>{{ request.session.get('user').get('full_name', 'User') if request.session.get('user') else 'User' }}</span>
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </button>
+                        <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-2">
+                            <a href="/dashboard" class="block px-4 py-2 text-slate-700 hover:bg-slate-50 transition">
+                                <i data-lucide="layout-dashboard" class="w-4 h-4 inline mr-2"></i>
+                                Dashboard
+                            </a>
+                            <a href="/dashboard/watchlist" class="block px-4 py-2 text-slate-700 hover:bg-slate-50 transition">
+                                <i data-lucide="bookmark" class="w-4 h-4 inline mr-2"></i>
+                                Watchlist
+                            </a>
+                            <hr class="my-2 border-slate-200">
+                            <a href="/admin" class="block px-4 py-2 text-blue-600 hover:bg-blue-50 transition">
+                                <i data-lucide="shield" class="w-4 h-4 inline mr-2"></i>
+                                Admin Panel
+                            </a>
+                            <hr class="my-2 border-slate-200">
+                            <a href="/auth/logout" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">
+                                <i data-lucide="log-out" class="w-4 h-4 inline mr-2"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="md:hidden" onclick="toggleMobileMenu()">
+                    <i data-lucide="menu" class="w-6 h-6" id="menuIcon"></i>
+                    <i data-lucide="x" class="w-6 h-6 hidden" id="closeIcon"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div class="md:hidden pb-4 space-y-2 hidden" id="mobileMenu">
+                <a href="/dashboard/search" class="block text-slate-600 hover:text-slate-900 py-2">Search</a>
+                <a href="/dashboard/watchlist" class="block text-slate-600 hover:text-slate-900 py-2">Watchlist</a>
+                <a href="/dashboard/news" class="block text-slate-600 hover:text-slate-900 py-2">Insights</a>
+                <a href="/dashboard" class="block text-slate-600 hover:text-slate-900 py-2">Dashboard</a>
+                <div class="pt-2 mt-2 border-t border-slate-200">
+                    <div class="px-4 py-2 text-sm text-slate-600">{{ request.session.get('user').get('full_name', 'User') if request.session.get('user') else 'User' }}</div>
+                    <a href="/admin" class="block text-blue-600 hover:text-blue-700 py-2">Admin Panel</a>
+                    <a href="/auth/logout" class="block text-red-600 hover:text-red-700 py-2">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Secondary Admin Navigation -->
+    <div class="bg-blue-600 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-1 overflow-x-auto">
+                <a href="/admin" class="px-4 py-3 text-white hover:bg-blue-700 transition font-medium whitespace-nowrap">
+                    <i data-lucide="layout-grid" class="w-4 h-4 inline mr-2"></i>
+                    Overview
+                </a>
+                <a href="/admin/users" class="px-4 py-3 text-white hover:bg-blue-700 transition font-medium whitespace-nowrap">
+                    <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>
+                    Users
+                </a>
+                <a href="/admin/companies" class="px-4 py-3 text-white hover:bg-blue-700 transition font-medium whitespace-nowrap border-b-2 border-white">
+                    <i data-lucide="building" class="w-4 h-4 inline mr-2"></i>
+                    Companies
+                </a>
+                <a href="/admin/assets" class="px-4 py-3 text-white hover:bg-blue-700 transition font-medium whitespace-nowrap">
+                    <i data-lucide="coins" class="w-4 h-4 inline mr-2"></i>
+                    Assets
+                </a>
+                <a href="/admin/content" class="px-4 py-3 text-white hover:bg-blue-700 transition font-medium whitespace-nowrap">
+                    <i data-lucide="newspaper" class="w-4 h-4 inline mr-2"></i>
+                    Content
+                </a>
+                <a href="/admin/recommendations" class="px-4 py-3 text-white hover:bg-blue-700 transition font-medium whitespace-nowrap">
+                    <i data-lucide="trending-up" class="w-4 h-4 inline mr-2"></i>
+                    Recommendations
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+            <!-- Company Stats -->
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-600 text-sm mb-1">Total Companies</p>
+                            <p class="text-3xl font-bold text-slate-900">{{ companies|length }}</p>
+                        </div>
+                        <i data-lucide="building" class="w-10 h-10 text-blue-600 opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-600 text-sm mb-1">Public Companies</p>
+                            <p class="text-3xl font-bold text-slate-900">{{ companies|selectattr('company_type', 'equalto', 'public')|list|length }}</p>
+                        </div>
+                        <i data-lucide="trending-up" class="w-10 h-10 text-green-600 opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-600 text-sm mb-1">Private Companies</p>
+                            <p class="text-3xl font-bold text-slate-900">{{ companies|selectattr('company_type', 'equalto', 'private')|list|length }}</p>
+                        </div>
+                        <i data-lucide="lock" class="w-10 h-10 text-orange-600 opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-600 text-sm mb-1">Industries</p>
+                            <p class="text-3xl font-bold text-slate-900">{{ companies|map(attribute='industry')|unique|list|length }}</p>
+                        </div>
+                        <i data-lucide="briefcase" class="w-10 h-10 text-purple-600 opacity-80"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Companies Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-6 border-b border-slate-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-slate-900">All Companies</h2>
+                        <a href="/admin/companies/add" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                            <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                            Add Company
+                        </a>
+                    </div>
+
+                    <!-- Search and Filters -->
+                    <form method="GET" action="/admin/companies" class="flex md:flex-row md:justify-between md:items-center gap-4 flex-col">
+                        <div class="md:w-1/3">
+                            <label>
+                                <input
+                                    type="text"
+                                    name="q"
+                                    value="{{ q }}"
+                                    placeholder="Search by ID, name, or industry..."
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                            </label>
+                        </div>
+                        <div class="md:w-1/3">
+                            <label>
+                                <select name="company_type" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All Types</option>
+                                    <option value="public" {% if company_type_filter == 'public' %}selected{% endif %}>Public</option>
+                                    <option value="private" {% if company_type_filter == 'private' %}selected{% endif %}>Private</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="md:w-1/4">
+                            <label>
+                                <select name="sort" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="company_name_asc" {% if sort == 'company_name_asc' %}selected{% endif %}>Name (A-Z)</option>
+                                    <option value="company_name_desc" {% if sort == 'company_name_desc' %}selected{% endif %}>Name (Z-A)</option>
+                                    <option value="company_id_asc" {% if sort == 'company_id_asc' %}selected{% endif %}>ID (Low-High)</option>
+                                    <option value="company_id_desc" {% if sort == 'company_id_desc' %}selected{% endif %}>ID (High-Low)</option>
+                                    <option value="company_type_asc" {% if sort == 'company_type_asc' %}selected{% endif %}>Type (A-Z)</option>
+                                    <option value="company_type_desc" {% if sort == 'company_type_desc' %}selected{% endif %}>Type (Z-A)</option>
+                                    <option value="industry_asc" {% if sort == 'industry_asc' %}selected{% endif %}>Industry (A-Z)</option>
+                                    <option value="industry_desc" {% if sort == 'industry_desc' %}selected{% endif %}>Industry (Z-A)</option>
+                                    <option value="market_cap_asc" {% if sort == 'market_cap_asc' %}selected{% endif %}>Market Cap (Low-High)</option>
+                                    <option value="market_cap_desc" {% if sort == 'market_cap_desc' %}selected{% endif %}>Market Cap (High-Low)</option>
+                                    <option value="founded_date_asc" {% if sort == 'founded_date_asc' %}selected{% endif %}>Founded Date (Old-New)</option>
+                                    <option value="founded_date_desc" {% if sort == 'founded_date_desc' %}selected{% endif %}>Founded Date (New-Old)</option>
+                            </select>
+                            </label>
+                        </div>
+
+                        <div class="flex gap-2 justify-end">
+
+                            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium whitespace-nowrap">
+                                <i data-lucide="search" class="w-4 h-4 inline mr-1"></i>
+                                Search
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Results Info -->
+                    <div class="mt-4 text-sm text-slate-600">
+                        Showing {{ companies|length }} of {{ total_companies }} companies
+                        {% if q or company_type_filter  %}
+                        <a href="/admin/companies" class="ml-2 text-blue-600 hover:text-blue-700">Clear filters</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-slate-200 bg-slate-50">
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">ID</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Company Name</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Type</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Industry</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Market Cap</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Founded</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for company in companies %}
+                            <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
+                                <td class="px-6 py-4 text-slate-600">#{{ company.company_id }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        {% if company.logo_url %}
+                                        <img src="{{ company.logo_url }}" alt="{{ company.company_name }}" class="w-8 h-8 rounded-full object-cover">
+                                        {% else %}
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <i data-lucide="building" class="w-4 h-4 text-blue-600"></i>
+                                        </div>
+                                        {% endif %}
+                                        <span class="font-semibold text-slate-900">{{ company.company_name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if company.company_type == 'public' %}
+                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                                        Public
+                                    </span>
+                                    {% else %}
+                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700">
+                                        Private
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-slate-600">{{ company.industry or 'N/A' }}</td>
+                                <td class="px-6 py-4 text-slate-600">
+                                    {% if company.market_cap %}
+                                        ${{ '{:,.0f}'.format(company.market_cap) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-slate-600">
+                                    {{ company.founded_date.strftime('%Y-%m-%d') if company.founded_date else 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex gap-2">
+                                        <a href="/admin/companies/edit/{{ company.company_id }}" class="text-blue-600 hover:text-blue-700" title="Edit">
+                                            <i data-lucide="edit" class="w-4 h-4"></i>
+                                        </a>
+                                        <button class="text-red-600 hover:text-red-700" title="Delete">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not companies %}
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center text-slate-500">
+                                    No companies found
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if total_pages > 1 %}
+                <div class="px-6 py-4 border-t border-slate-200 flex justify-between items-center">
+                    <div class="text-sm text-slate-600">
+                        Page {{ page }} of {{ total_pages }}
+                    </div>
+                    <div class="flex gap-2">
+                        {% if page > 1 %}
+                        <a href="/admin/companies?page={{ page - 1 }}&search={{ search }}&company_type={{ company_type_filter }}&industry={{ industry_filter }}&sort={{ sort }}" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium">
+                            <i data-lucide="chevron-left" class="w-4 h-4 inline mr-1"></i>
+                            Previous
+                        </a>
+                        {% else %}
+                        <span class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg cursor-not-allowed font-medium">
+                            <i data-lucide="chevron-left" class="w-4 h-4 inline mr-1"></i>
+                            Previous
+                        </span>
+                        {% endif %}
+
+                        <!-- Page numbers -->
+                        <div class="hidden md:flex gap-1">
+                            {% for p in range(1, total_pages + 1) %}
+                                {% if p == page %}
+                                <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">{{ p }}</span>
+                                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                                <a href="/admin/companies?page={{ p }}&search={{ search }}&company_type={{ company_type_filter }}&industry={{ industry_filter }}&sort={{ sort }}" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium">{{ p }}</a>
+                                {% elif p == page - 3 or p == page + 3 %}
+                                <span class="px-4 py-2 text-slate-400">...</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        {% if page < total_pages %}
+                        <a href="/admin/companies?page={{ page + 1 }}&search={{ search }}&company_type={{ company_type_filter }}&industry={{ industry_filter }}&sort={{ sort }}" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium">
+                            Next
+                            <i data-lucide="chevron-right" class="w-4 h-4 inline ml-1"></i>
+                        </a>
+                        {% else %}
+                        <span class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg cursor-not-allowed font-medium">
+                            Next
+                            <i data-lucide="chevron-right" class="w-4 h-4 inline ml-1"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <script src="/assets/js/main.js"></script>
+    <script>
+        lucide.createIcons();
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const menuIcon = document.getElementById('menuIcon');
+            const closeIcon = document.getElementById('closeIcon');
+            menu.classList.toggle('hidden');
+            menuIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            if (!document.getElementById('userDropdown')?.contains(e.target)) {
+                document.getElementById('dropdownMenu')?.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

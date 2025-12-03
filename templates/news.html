@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Insights & News - Business Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
+    <!-- Navigation -->
+    {% include "components/navigation.html" %}
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Header -->
+            <div class="mb-12">
+                <h1 class="text-4xl font-bold text-slate-900 mb-2">Market Insights & News</h1>
+                <p class="text-slate-600">Latest news, sentiment analysis, and market trends across all companies and assets</p>
+            </div>
+
+            <!-- Sentiment Filter -->
+            <div class="flex gap-3 mb-8 flex-wrap">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition">All News</button>
+                <button class="px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-full font-medium hover:border-slate-300 transition">Positive</button>
+                <button class="px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-full font-medium hover:border-slate-300 transition">Neutral</button>
+                <button class="px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-full font-medium hover:border-slate-300 transition">Negative</button>
+            </div>
+
+            <!-- News List -->
+            <!-- loop: newsItems -->
+            <div class="space-y-6">
+                <article class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <div class="flex-1">
+                            <h2 class="text-xl font-bold text-slate-900 mb-2">Apple Reports Record Quarterly Revenue</h2>
+                            <div class="flex gap-3 flex-wrap items-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Positive</span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">News</span>
+                                <span class="text-xs text-slate-500">Mar 15, 2024</span>
+                            </div>
+                        </div>
+                        <a href="#" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 flex-shrink-0" title="Open source">
+                            <i data-lucide="external-link" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                    <p class="text-slate-700 mb-4 leading-relaxed">Apple Inc. announced record-breaking quarterly revenue of $394.3 billion, exceeding analyst expectations by 8%. The company attributes growth to strong iPhone 15 sales and services segment expansion.</p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-200">
+                        <div class="flex gap-4 text-xs text-slate-600">
+                            <span><strong>Source:</strong> Financial Times</span>
+                            <span><strong>Scraped:</strong> Mar 15, 2024</span>
+                        </div>
+                        <a href="#" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1">
+                            Read Full Article
+                            <i data-lucide="external-link" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <article class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <div class="flex-1">
+                            <h2 class="text-xl font-bold text-slate-900 mb-2">Tesla Stock Surge Amid New Model Announcements</h2>
+                            <div class="flex gap-3 flex-wrap items-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Positive</span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">News</span>
+                                <span class="text-xs text-slate-500">Mar 14, 2024</span>
+                            </div>
+                        </div>
+                        <a href="#" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 flex-shrink-0">
+                            <i data-lucide="external-link" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                    <p class="text-slate-700 mb-4 leading-relaxed">Tesla's stock climbed 5.2% following the announcement of three new vehicle models. Market analysts view the expansion as a strategic move to capture larger market share in the EV sector.</p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-200">
+                        <div class="flex gap-4 text-xs text-slate-600">
+                            <span><strong>Source:</strong> Bloomberg</span>
+                            <span><strong>Scraped:</strong> Mar 14, 2024</span>
+                        </div>
+                        <a href="#" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1">
+                            Read Full Article
+                            <i data-lucide="external-link" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <article class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <div class="flex-1">
+                            <h2 class="text-xl font-bold text-slate-900 mb-2">Gold Prices Rise Amid Market Uncertainty</h2>
+                            <div class="flex gap-3 flex-wrap items-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Positive</span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">News</span>
+                                <span class="text-xs text-slate-500">Mar 13, 2024</span>
+                            </div>
+                        </div>
+                        <a href="#" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 flex-shrink-0">
+                            <i data-lucide="external-link" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                    <p class="text-slate-700 mb-4 leading-relaxed">Precious metals market sees increased demand as investors seek safe-haven assets. Gold prices reached $2,048 per ounce, the highest level in 6 months, driven by geopolitical tensions and economic concerns.</p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-200">
+                        <div class="flex gap-4 text-xs text-slate-600">
+                            <span><strong>Source:</strong> Reuters</span>
+                            <span><strong>Scraped:</strong> Mar 13, 2024</span>
+                        </div>
+                        <a href="#" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1">
+                            Read Full Article
+                            <i data-lucide="external-link" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+            <!-- /loop: newsItems -->
+
+            <!-- Load More -->
+            <div class="text-center mt-12">
+                <button class="px-8 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition">Load More Articles</button>
+            </div>
+        </div>
+    </main>
+
+    {% include "components/footer.html" %}
+    {% include "components/script.html" %}
+</body>
+</html>

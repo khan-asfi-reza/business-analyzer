@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Analyzer - Investment Intelligence Made Simple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
+    <!-- Navigation -->
+    {% include 'components/navigation.html' %}
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <!-- Hero Section -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                        Investment Intelligence Made Simple
+                    </h1>
+                    <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+                        Business Analyzer helps beginner investors, retail traders, and students make
+                        informed investment decisions with AI-powered analysis, real-time data, and
+                        clear recommendations.
+                    </p>
+
+                    <!-- Search Bar -->
+                    <form onsubmit="handleSearch(event)" class="mb-8">
+                        <div class="flex gap-2 max-w-2xl mx-auto">
+                            <div class="flex-1 relative">
+                                <input
+                                    type="text"
+                                    id="searchInput"
+                                    placeholder="Search any company, asset, or commodity..."
+                                    class="w-full px-6 py-4 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition flex items-center gap-2"
+                            >
+                                <i data-lucide="search" class="w-5 h-5"></i>
+                                <span class="hidden sm:inline">Search</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Quick Links -->
+                    <!-- loop: quickLinks -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="/dashboard/search?market=bangladesh" class="px-6 py-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition font-medium">
+                            Bangladesh Market
+                        </a>
+                        <a href="/dashboard/search?market=global" class="px-6 py-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition font-medium">
+                            Global Market
+                        </a>
+                        <a href="/dashboard/search?type=commodity" class="px-6 py-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg hover:bg-opacity-30 transition font-medium">
+                            Commodities
+                        </a>
+                    </div>
+                    <!-- /loop: quickLinks -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem Statement -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+            <div class="bg-white rounded-xl p-8 md:p-12 shadow-lg border border-slate-200">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+                    Why Business Analyzer?
+                </h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-semibold text-slate-900 mb-4 text-lg">The Challenge</h3>
+                        <!-- loop: challenges -->
+                        <ul class="space-y-3 text-slate-600">
+                            <li class="flex gap-3">
+                                <span class="text-blue-600 font-bold">•</span>
+                                <span>Expensive tools: Professional analysis tools cost thousands per month</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-blue-600 font-bold">•</span>
+                                <span>Scattered information: Data fragmented across multiple websites</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-blue-600 font-bold">•</span>
+                                <span>Complex analysis: Understanding investment risk requires expertise</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-blue-600 font-bold">•</span>
+                                <span>Limited regional focus: Most tools ignore emerging markets</span>
+                            </li>
+                        </ul>
+                        <!-- /loop: challenges -->
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-900 mb-4 text-lg">Our Solution</h3>
+                        <!-- loop: solutions -->
+                        <ul class="space-y-3 text-slate-600">
+                            <li class="flex gap-3">
+                                <span class="text-green-600 font-bold">✓</span>
+                                <span>Affordable access to powerful analysis tools for everyone</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-green-600 font-bold">✓</span>
+                                <span>All data in one place: prices, news, sentiment, financials</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-green-600 font-bold">✓</span>
+                                <span>AI and formulas simplify complex investment decisions</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-green-600 font-bold">✓</span>
+                                <span>Global and regional market support from day one</span>
+                            </li>
+                        </ul>
+                        <!-- /loop: solutions -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-12 text-center">
+                Powerful Features
+            </h2>
+            <!-- loop: features -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl p-8 border border-slate-200 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="text-blue-600 mb-4">
+                        <i data-lucide="bar-chart-3" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-3 text-lg">AI-Powered Analysis</h3>
+                    <p class="text-slate-600">Sentiment analysis and statistical algorithms provide clear investment recommendations</p>
+                </div>
+                <div class="bg-white rounded-xl p-8 border border-slate-200 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="text-blue-600 mb-4">
+                        <i data-lucide="trending-up" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-3 text-lg">Real-Time Data</h3>
+                    <p class="text-slate-600">Access stock prices, financial statements, and market trends in one place</p>
+                </div>
+                <div class="bg-white rounded-xl p-8 border border-slate-200 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="text-blue-600 mb-4">
+                        <i data-lucide="shield" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-3 text-lg">Risk Assessment</h3>
+                    <p class="text-slate-600">Understand investment safety with Low, Medium, and High risk ratings</p>
+                </div>
+                <div class="bg-white rounded-xl p-8 border border-slate-200 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="text-blue-600 mb-4">
+                        <i data-lucide="globe" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-3 text-lg">Global & Regional</h3>
+                    <p class="text-slate-600">Explore both global markets and regional (Bangladesh) opportunities</p>
+                </div>
+                <div class="bg-white rounded-xl p-8 border border-slate-200 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="text-blue-600 mb-4">
+                        <i data-lucide="zap" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-3 text-lg">Smart Watchlist</h3>
+                    <p class="text-slate-600">Save companies and assets, receive alerts when important changes occur</p>
+                </div>
+                <div class="bg-white rounded-xl p-8 border border-slate-200 hover:shadow-lg hover:border-blue-200 transition">
+                    <div class="text-blue-600 mb-4">
+                        <i data-lucide="search" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-900 mb-3 text-lg">Comprehensive Search</h3>
+                    <p class="text-slate-600">Search any public or private company, commodity, or precious metal instantly</p>
+                </div>
+            </div>
+            <!-- /loop: features -->
+        </div>
+
+        <!-- CTA Section -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6">
+                    Ready to Make Smarter Investment Decisions?
+                </h2>
+                <p class="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
+                    Start exploring companies, assets, and recommendations today. No sign-up required to search.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/dashboard/search" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+                        Start Searching
+                    </a>
+                    <a href="/documentation" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:bg-opacity-10 transition">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Target Users -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-12 text-center">
+                Built for Everyone
+            </h2>
+            <!-- loop: targetUsers -->
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Beginner Investors</h3>
+                    <p class="text-slate-600 text-sm">Start learning with clear, simple explanations</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Retail Traders</h3>
+                    <p class="text-slate-600 text-sm">Quick access to trends and sentiment analysis</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Students</h3>
+                    <p class="text-slate-600 text-sm">Learn investment analysis and market dynamics</p>
+                </div>
+                <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <h3 class="font-semibold text-slate-900 mb-2">Everyone</h3>
+                    <p class="text-slate-600 text-sm">Seeking investment guidance and insights</p>
+                </div>
+            </div>
+            <!-- /loop: targetUsers -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+
+    {% include "components/footer.html" %}
+    {% include "components/script.html" %}
+</body>
+</html>

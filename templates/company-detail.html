@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Inc. - Business Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
+    <!-- Navigation -->
+    {% include "components/navigation.html" %}
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Header -->
+            <div class="bg-white rounded-xl border border-slate-200 p-8 mb-8">
+                <div class="flex items-start justify-between mb-6">
+                    <div class="flex gap-6">
+                        <img src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=200&q=80" alt="Apple Inc." class="w-20 h-20 rounded-lg object-cover" />
+                        <div>
+                            <h1 class="text-4xl font-bold text-slate-900 mb-2">Apple Inc.</h1>
+                            <div class="flex gap-3 flex-wrap">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">Public</span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">Technology</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="toggleBookmark()" id="bookmarkBtn" class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-slate-100 text-slate-900 hover:bg-slate-200">
+                        <i data-lucide="bookmark" class="w-5 h-5"></i>
+                        <span>Add to Watchlist</span>
+                    </button>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6 pt-6 border-t border-slate-200">
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Founded</p>
+                        <p class="text-lg font-semibold text-slate-900">1976</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Market Cap</p>
+                        <p class="text-lg font-semibold text-slate-900">$3.2 Trillion</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Description</p>
+                        <p class="text-slate-700">Apple Inc. is an American technology company that designs, manufactures, and markets mobile devices, personal computers, and software.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <!-- Price Trend Chart -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-8 mb-8">
+                        <h2 class="text-2xl font-bold text-slate-900 mb-6">Price Trend</h2>
+                        <div class="mb-6">
+                            <div class="flex items-baseline gap-2 mb-6">
+                                <span class="text-4xl font-bold text-slate-900">$189.45</span>
+                                <span class="text-green-600 font-semibold text-lg">+5.2% this month</span>
+                            </div>
+
+                            <!-- Simple Chart Visualization -->
+                            <!-- loop: priceData -->
+                            <div class="flex items-end justify-between h-48 gap-2 px-2">
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 60%" title="Oct: $165.2"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Oct</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 70%" title="Nov: $172.5"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Nov</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 100%" title="Dec: $189.45"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Dec</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 75%" title="Jan: $175.3"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Jan</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 85%" title="Feb: $182.8"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Feb</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 100%" title="Mar: $189.45"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Mar</span>
+                                </div>
+                            </div>
+                            <!-- /loop: priceData -->
+                        </div>
+                        <p class="text-sm text-slate-600">Chart updated in real-time. Historical data available from the last 6 months.</p>
+                    </div>
+
+                    <!-- Financial Summary -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-8 mb-8">
+                        <h2 class="text-2xl font-bold text-slate-900 mb-6">Financial Summary</h2>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <p class="text-slate-600 text-sm mb-2">Revenue</p>
+                                <p class="text-3xl font-bold text-slate-900 mb-1">$394.3 Billion</p>
+                                <p class="text-green-600 font-semibold text-sm flex items-center gap-1">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                    +5.5%
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-slate-600 text-sm mb-2">Profit</p>
+                                <p class="text-3xl font-bold text-slate-900 mb-1">$99.8 Billion</p>
+                                <p class="text-green-600 font-semibold text-sm flex items-center gap-1">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                    +4.2%
+                                </p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-600 mt-6 pt-6 border-t border-slate-200">Period: FY 2024</p>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <!-- Sentiment Card -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Sentiment</h3>
+                        <div class="mb-4">
+                            <span class="px-4 py-2 rounded-full font-semibold text-white bg-green-600">Positive</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-xs text-slate-600 mb-1">Sentiment Score</p>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 78%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold">78%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-600 mb-1">Confidence</p>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 92%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold">92%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation Card -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-6 mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">AI Recommendation</h3>
+                        <div class="mb-4">
+                            <span class="px-4 py-2 rounded-full font-semibold bg-green-600 text-white text-sm">Invest (Strong)</span>
+                        </div>
+                        <div class="space-y-3 mb-4">
+                            <div>
+                                <p class="text-sm text-slate-600 mb-1">Risk Level</p>
+                                <p class="font-bold text-green-600">Low</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-slate-600 mb-2">Investment Score</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 bg-white rounded-full h-3">
+                                        <div class="bg-green-500 h-3 rounded-full" style="width: 82%"></div>
+                                    </div>
+                                    <span class="text-lg font-bold">82</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-700">
+                            <strong>Why:</strong> Strong financial performance, positive market sentiment, and solid revenue growth indicate a buy opportunity.
+                        </p>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Personal Notes</h3>
+                        <textarea id="companyNotes" placeholder="Add your personal notes about this company..." class="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 resize-none mb-3" rows="4"></textarea>
+                        <button onclick="saveNotes()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Save Notes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+
+    {% include "components/footer.html" %}
+    {% include "components/script.html" %}
+    <script>
+        lucide.createIcons();
+
+        let isBookmarked = false;
+
+        function toggleBookmark() {
+            isBookmarked = !isBookmarked;
+            const btn = document.getElementById('bookmarkBtn');
+            if (isBookmarked) {
+                btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-blue-600 text-white hover:bg-blue-700';
+                btn.innerHTML = '<i data-lucide="bookmark-check" class="w-5 h-5"></i><span>In Watchlist</span>';
+            } else {
+                btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-slate-100 text-slate-900 hover:bg-slate-200';
+                btn.innerHTML = '<i data-lucide="bookmark" class="w-5 h-5"></i><span>Add to Watchlist</span>';
+            }
+            lucide.createIcons();
+        }
+
+        function saveNotes() {
+            const notes = document.getElementById('companyNotes').value;
+            alert('Notes saved: ' + notes);
+        }
+    </script>
+</body>
+</html>

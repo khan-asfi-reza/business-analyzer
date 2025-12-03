@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold - Business Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
+    <!-- Navigation (same as other pages) -->
+    <nav class="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center gap-2 font-bold text-lg">
+                    <i data-lucide="bar-chart-3" class="w-6 h-6 text-blue-600"></i>
+                    <span class="text-slate-900">Business Analyzer</span>
+                </a>
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="/" class="text-slate-600 hover:text-slate-900 transition font-medium">Home</a>
+                    <a href="/dashboard/search" class="text-slate-600 hover:text-slate-900 transition font-medium">Search</a>
+                    <a href="/dashboard/watchlist" class="text-slate-600 hover:text-slate-900 transition font-medium">Watchlist</a>
+                    <a href="/dashboard/news" class="text-slate-600 hover:text-slate-900 transition font-medium">Insights</a>
+                    <a href="/dashboard" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">Dashboard</a>
+                </div>
+                <button class="md:hidden" onclick="toggleMobileMenu()">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Header -->
+            <div class="bg-white rounded-xl border border-slate-200 p-8 mb-8">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h1 class="text-4xl font-bold text-slate-900 mb-2">Gold</h1>
+                        <div class="flex gap-3 flex-wrap">
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">Precious Metal</span>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">per troy ounce</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleBookmark()" id="bookmarkBtn" class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-slate-100 text-slate-900 hover:bg-slate-200">
+                        <i data-lucide="bookmark" class="w-5 h-5"></i>
+                        <span>Add to Watchlist</span>
+                    </button>
+                </div>
+
+                <p class="text-slate-700 mb-6 text-lg">Gold is a precious metal widely considered a safe-haven investment. It is used in jewelry, industrial applications, and as a store of value.</p>
+
+                <div class="grid md:grid-cols-5 gap-4 pt-6 border-t border-slate-200">
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Current Price</p>
+                        <p class="text-2xl font-bold text-slate-900">$2,048</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Change</p>
+                        <p class="text-lg font-bold text-green-600 flex items-center gap-1">
+                            <i data-lucide="trending-up" class="w-4 h-4"></i>
+                            +3.8%
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">52-Week High</p>
+                        <p class="text-lg font-bold text-slate-900">$2,180</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">52-Week Low</p>
+                        <p class="text-lg font-bold text-slate-900">$1,850</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Average</p>
+                        <p class="text-lg font-bold text-slate-900">$2,015</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <!-- Price Trend Chart -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-8 mb-8">
+                        <h2 class="text-2xl font-bold text-slate-900 mb-6">Price Trend</h2>
+                        <div class="mb-6">
+                            <div class="flex items-baseline gap-2 mb-6">
+                                <span class="text-4xl font-bold text-slate-900">$2,048</span>
+                                <span class="text-green-600 font-semibold text-lg">+3.8% this month</span>
+                            </div>
+
+                            <!-- Simple Chart Visualization -->
+                            <!-- loop: historicalData -->
+                            <div class="flex items-end justify-between h-48 gap-2 px-2">
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 50%"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Oct</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 65%"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Nov</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 85%"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Dec</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 60%"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Jan</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 90%"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Feb</span>
+                                </div>
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 100%"></div>
+                                    <span class="text-xs text-slate-600 font-medium">Mar</span>
+                                </div>
+                            </div>
+                            <!-- /loop: historicalData -->
+                        </div>
+                        <p class="text-sm text-slate-600">Chart updated in real-time. Historical data available from the last 6 months.</p>
+                    </div>
+
+                    <!-- Asset Details -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-8">
+                        <h2 class="text-2xl font-bold text-slate-900 mb-6">Asset Details</h2>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <p class="text-slate-600 text-sm mb-2">Type</p>
+                                <p class="text-lg font-semibold text-slate-900">Precious Metal</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-600 text-sm mb-2">Unit of Measurement</p>
+                                <p class="text-lg font-semibold text-slate-900">per troy ounce</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-700 mt-6">Safe-haven assets like gold are often used to diversify investment portfolios and protect against economic uncertainty. Historical data shows positive performance during market volatility.</p>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <!-- Sentiment Card -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Sentiment</h3>
+                        <div class="mb-4">
+                            <span class="px-4 py-2 rounded-full font-semibold text-white bg-green-600">Positive</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-xs text-slate-600 mb-1">Sentiment Score</p>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 82%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold">82%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-600 mb-1">Confidence</p>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 88%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold">88%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation Card -->
+                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl border border-yellow-200 p-6 mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">AI Recommendation</h3>
+                        <div class="mb-4">
+                            <span class="px-4 py-2 rounded-full font-semibold bg-green-600 text-white text-sm">Invest (Moderate)</span>
+                        </div>
+                        <div class="space-y-3 mb-4">
+                            <div>
+                                <p class="text-sm text-slate-600 mb-1">Risk Level</p>
+                                <p class="font-bold text-green-600">Low</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-slate-600 mb-2">Investment Score</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 bg-white rounded-full h-3">
+                                        <div class="bg-green-500 h-3 rounded-full" style="width: 76%"></div>
+                                    </div>
+                                    <span class="text-lg font-bold">76</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-700">
+                            <strong>Why:</strong> Safe-haven asset with positive market sentiment. Strong performance amid economic uncertainty makes it a good diversification choice.
+                        </p>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Personal Notes</h3>
+                        <textarea id="assetNotes" placeholder="Add your personal notes about this asset..." class="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 resize-none mb-3" rows="4"></textarea>
+                        <button onclick="saveNotes()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Save Notes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    {% include "components/footer.html" %}
+    {% include "components/script.html" %}
+    <script>
+        lucide.createIcons();
+        let isBookmarked = false;
+
+        function toggleBookmark() {
+            isBookmarked = !isBookmarked;
+            const btn = document.getElementById('bookmarkBtn');
+            if (isBookmarked) {
+                btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-blue-600 text-white hover:bg-blue-700';
+                btn.innerHTML = '<i data-lucide="bookmark-check" class="w-5 h-5"></i><span>In Watchlist</span>';
+            } else {
+                btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-slate-100 text-slate-900 hover:bg-slate-200';
+                btn.innerHTML = '<i data-lucide="bookmark" class="w-5 h-5"></i><span>Add to Watchlist</span>';
+            }
+            lucide.createIcons();
+        }
+
+        function saveNotes() {
+            const notes = document.getElementById('assetNotes').value;
+            alert('Notes saved: ' + notes);
+        }
+    </script>
+</body>
+</html>

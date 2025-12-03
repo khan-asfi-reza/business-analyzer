@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Watchlist - Business Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
+    <!-- Navigation -->
+    {% include "components/navigation.html" %}
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-slate-900 mb-2">My Watchlist</h1>
+                <p class="text-slate-600">3 items tracked</p>
+            </div>
+
+            <!-- Watchlist Items -->
+            <!-- loop: watchlistItems -->
+            <div class="space-y-4">
+                <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition">
+                    <div class="grid lg:grid-cols-5 gap-6 items-start">
+                        <!-- Name & Type -->
+                        <div class="lg:col-span-2">
+                            <a href="/dashboard/company?id=1" class="text-lg font-bold text-slate-900 hover:text-blue-600 transition block mb-2">
+                                Apple Inc.
+                            </a>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">Company</span>
+                        </div>
+
+                        <!-- Price & Change -->
+                        <div>
+                            <p class="text-slate-600 text-sm mb-1">Current Price</p>
+                            <p class="text-xl font-bold text-slate-900">$189.45</p>
+                            <p class="text-sm font-semibold flex items-center gap-1 mt-1 text-green-600">
+                                <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                +5.2%
+                            </p>
+                        </div>
+
+                        <!-- Recommendation & Risk -->
+                        <div>
+                            <p class="text-slate-600 text-sm mb-2">Recommendation</p>
+                            <div class="flex gap-2 flex-col">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold w-fit bg-green-100 text-green-700">Invest</span>
+                                <p class="text-sm font-semibold text-green-600">Low Risk</p>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex justify-end">
+                            <button onclick="removeItem(1)" class="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition" title="Remove from watchlist">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="mt-6 pt-6 border-t border-slate-200">
+                        <p class="text-slate-600 text-sm mb-3">Personal Notes</p>
+                        <p class="text-slate-700">Strong tech player with consistent growth</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition">
+                    <div class="grid lg:grid-cols-5 gap-6 items-start">
+                        <div class="lg:col-span-2">
+                            <a href="/dashboard/company?id=2" class="text-lg font-bold text-slate-900 hover:text-blue-600 transition block mb-2">
+                                Tesla Inc.
+                            </a>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">Company</span>
+                        </div>
+                        <div>
+                            <p class="text-slate-600 text-sm mb-1">Current Price</p>
+                            <p class="text-xl font-bold text-slate-900">$238.50</p>
+                            <p class="text-sm font-semibold flex items-center gap-1 mt-1 text-red-600">
+                                <i data-lucide="trending-down" class="w-4 h-4"></i>
+                                -2.1%
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-slate-600 text-sm mb-2">Recommendation</p>
+                            <div class="flex gap-2 flex-col">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold w-fit bg-yellow-100 text-yellow-700">Hold</span>
+                                <p class="text-sm font-semibold text-yellow-600">Medium Risk</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button onclick="removeItem(2)" class="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition" title="Remove from watchlist">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-6 border-t border-slate-200">
+                        <p class="text-slate-600 text-sm mb-3">Personal Notes</p>
+                        <p class="text-slate-700">Waiting for earnings report</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition">
+                    <div class="grid lg:grid-cols-5 gap-6 items-start">
+                        <div class="lg:col-span-2">
+                            <a href="/dashboard/asset?id=3" class="text-lg font-bold text-slate-900 hover:text-blue-600 transition block mb-2">
+                                Gold
+                            </a>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">Asset</span>
+                        </div>
+                        <div>
+                            <p class="text-slate-600 text-sm mb-1">Current Price</p>
+                            <p class="text-xl font-bold text-slate-900">$2,048</p>
+                            <p class="text-sm font-semibold flex items-center gap-1 mt-1 text-green-600">
+                                <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                +3.8%
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-slate-600 text-sm mb-2">Recommendation</p>
+                            <div class="flex gap-2 flex-col">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold w-fit bg-green-100 text-green-700">Invest</span>
+                                <p class="text-sm font-semibold text-green-600">Low Risk</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button onclick="removeItem(3)" class="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition" title="Remove from watchlist">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-6 border-t border-slate-200">
+                        <p class="text-slate-600 text-sm mb-3">Personal Notes</p>
+                        <p class="text-slate-700">Safe haven investment</p>
+                    </div>
+                </div>
+            </div>
+            <!-- /loop: watchlistItems -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    {% include "components/footer.html" %}
+    {% include "components/script.html" %}
+
+
+</body>
+</html>
