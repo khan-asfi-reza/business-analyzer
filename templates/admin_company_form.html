@@ -241,6 +241,38 @@
                         >
                     </div>
 
+                    <!-- Stock Symbol -->
+                    <div class="mb-6">
+                        <label for="stock_symbol" class="block text-sm font-semibold text-slate-900 mb-2">
+                            Stock Symbol
+                        </label>
+                        <input
+                            type="text"
+                            id="stock_symbol"
+                            name="stock_symbol"
+                            value="{{ company.stock_symbol if company else '' }}"
+                            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                            placeholder="e.g., AAPL, GOOGL, GP"
+                        >
+                        <p class="mt-1 text-xs text-slate-500">Ticker symbol for stock price fetching (e.g., AAPL for Apple)</p>
+                    </div>
+
+                    <!-- Stock Exchange -->
+                    <div class="mb-6">
+                        <label for="stock_exchange" class="block text-sm font-semibold text-slate-900 mb-2">
+                            Stock Exchange
+                        </label>
+                        <input
+                            type="text"
+                            id="stock_exchange"
+                            name="stock_exchange"
+                            value="{{ company.stock_exchange if company else '' }}"
+                            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., NASDAQ, NYSE, DSE"
+                        >
+                        <p class="mt-1 text-xs text-slate-500">Stock exchange where the company is listed (leave empty for Bangladesh stocks)</p>
+                    </div>
+
                     <!-- Description -->
                     <div class="mb-8">
                         <label for="description" class="block text-sm font-semibold text-slate-900 mb-2">

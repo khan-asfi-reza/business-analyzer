@@ -36,10 +36,17 @@
                             </a>
                             {% endif %}
                             <hr class="my-2 border-slate-200">
+                            {% if request.session.get('user') %}
                             <a href="/auth/logout" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">
                                 <i data-lucide="log-out" class="w-4 h-4 inline mr-2"></i>
                                 Logout
                             </a>
+                            {% else %}
+                                <a href="/auth/login" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">
+                                <i data-lucide="log-out" class="w-4 h-4 inline mr-2"></i>
+                                Login
+                            </a>
+                           {% endif %}
                         </div>
                     </div>
                 </div>

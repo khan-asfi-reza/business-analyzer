@@ -3,33 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gold - Business Analyzer</title>
+    <title>{{ asset.asset_name }} - Business Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
-    <!-- Navigation (same as other pages) -->
-    <nav class="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <a href="/" class="flex items-center gap-2 font-bold text-lg">
-                    <i data-lucide="bar-chart-3" class="w-6 h-6 text-blue-600"></i>
-                    <span class="text-slate-900">Business Analyzer</span>
-                </a>
-                <div class="hidden md:flex items-center gap-8">
-                    <a href="/" class="text-slate-600 hover:text-slate-900 transition font-medium">Home</a>
-                    <a href="/dashboard/search" class="text-slate-600 hover:text-slate-900 transition font-medium">Search</a>
-                    <a href="/dashboard/watchlist" class="text-slate-600 hover:text-slate-900 transition font-medium">Watchlist</a>
-                    <a href="/dashboard/news" class="text-slate-600 hover:text-slate-900 transition font-medium">Insights</a>
-                    <a href="/dashboard" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">Dashboard</a>
-                </div>
-                <button class="md:hidden" onclick="toggleMobileMenu()">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
+    <!-- Navigation -->
+    {% include "components/navigation.html" %}
 
     <!-- Main Content -->
     <main class="flex-1">
@@ -38,44 +20,55 @@
             <div class="bg-white rounded-xl border border-slate-200 p-8 mb-8">
                 <div class="flex items-start justify-between mb-6">
                     <div>
-                        <h1 class="text-4xl font-bold text-slate-900 mb-2">Gold</h1>
+                        <h1 class="text-4xl font-bold text-slate-900 mb-2">{{ asset.asset_name }}</h1>
                         <div class="flex gap-3 flex-wrap">
-                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">Precious Metal</span>
-                            <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">per troy ounce</span>
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">{{ asset.asset_type|title }}</span>
+                            {% if asset.unit_of_measurement %}
+                            <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">{{ asset.unit_of_measurement }}</span>
+                            {% endif %}
                         </div>
                     </div>
-                    <button onclick="toggleBookmark()" id="bookmarkBtn" class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-slate-100 text-slate-900 hover:bg-slate-200">
-                        <i data-lucide="bookmark" class="w-5 h-5"></i>
-                        <span>Add to Watchlist</span>
+                    <button onclick="toggleBookmark()" id="bookmarkBtn" class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition {% if is_bookmarked %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-slate-100 text-slate-900 hover:bg-slate-200{% endif %}">
+                        <i data-lucide="{% if is_bookmarked %}bookmark-check{% else %}bookmark{% endif %}" class="w-5 h-5"></i>
+                        <span>{% if is_bookmarked %}In Watchlist{% else %}Add to Watchlist{% endif %}</span>
                     </button>
                 </div>
 
-                <p class="text-slate-700 mb-6 text-lg">Gold is a precious metal widely considered a safe-haven investment. It is used in jewelry, industrial applications, and as a store of value.</p>
+                {% if asset.description %}
+                <p class="text-slate-700 mb-6 text-lg">{{ asset.description }}</p>
+                {% endif %}
 
-                <div class="grid md:grid-cols-5 gap-4 pt-6 border-t border-slate-200">
+                <div class="grid md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
                     <div>
                         <p class="text-slate-600 text-sm mb-1">Current Price</p>
-                        <p class="text-2xl font-bold text-slate-900">$2,048</p>
+                        {% if latest_price %}
+                        <p class="text-2xl font-bold text-slate-900">{{ "%.2f"|format(latest_price.price) }} {{ latest_price.currency }}</p>
+                        {% else %}
+                        <p class="text-2xl font-bold text-slate-900">N/A</p>
+                        {% endif %}
                     </div>
+                    {% if price_history and price_history|length >= 2 %}
+                    {% set latest = price_history[0] %}
+                    {% set previous = price_history[-1] %}
+                    {% set change = ((latest.price - previous.price) / previous.price * 100) if previous.price != 0 else 0 %}
                     <div>
                         <p class="text-slate-600 text-sm mb-1">Change</p>
-                        <p class="text-lg font-bold text-green-600 flex items-center gap-1">
-                            <i data-lucide="trending-up" class="w-4 h-4"></i>
-                            +3.8%
+                        <p class="text-lg font-bold {% if change >= 0 %}text-green-600{% else %}text-red-600{% endif %} flex items-center gap-1">
+                            <i data-lucide="{% if change >= 0 %}trending-up{% else %}trending-down{% endif %}" class="w-4 h-4"></i>
+                            {{ "%+.2f"|format(change) }}%
                         </p>
                     </div>
+                    {% set max_price = price_history|map(attribute='price')|max %}
+                    {% set min_price = price_history|map(attribute='price')|min %}
                     <div>
-                        <p class="text-slate-600 text-sm mb-1">52-Week High</p>
-                        <p class="text-lg font-bold text-slate-900">$2,180</p>
+                        <p class="text-slate-600 text-sm mb-1">High (180d)</p>
+                        <p class="text-lg font-bold text-slate-900">{{ "%.2f"|format(max_price) }}</p>
                     </div>
                     <div>
-                        <p class="text-slate-600 text-sm mb-1">52-Week Low</p>
-                        <p class="text-lg font-bold text-slate-900">$1,850</p>
+                        <p class="text-slate-600 text-sm mb-1">Low (180d)</p>
+                        <p class="text-lg font-bold text-slate-900">{{ "%.2f"|format(min_price) }}</p>
                     </div>
-                    <div>
-                        <p class="text-slate-600 text-sm mb-1">Average</p>
-                        <p class="text-lg font-bold text-slate-900">$2,015</p>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -87,41 +80,31 @@
                         <h2 class="text-2xl font-bold text-slate-900 mb-6">Price Trend</h2>
                         <div class="mb-6">
                             <div class="flex items-baseline gap-2 mb-6">
-                                <span class="text-4xl font-bold text-slate-900">$2,048</span>
-                                <span class="text-green-600 font-semibold text-lg">+3.8% this month</span>
+                                {% if latest_price %}
+                                <span class="text-4xl font-bold text-slate-900">{{ "%.2f"|format(latest_price.price) }} {{ latest_price.currency }}</span>
+                                {% if price_history and price_history|length >= 2 %}
+                                {% set latest = price_history[0] %}
+                                {% set previous = price_history[-1] %}
+                                {% set change = ((latest.price - previous.price) / previous.price * 100) if previous.price != 0 else 0 %}
+                                <span class="{% if change >= 0 %}text-green-600{% else %}text-red-600{% endif %} font-semibold text-lg">{{ "%+.2f"|format(change) }}% (180 days)</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-4xl font-bold text-slate-900">N/A</span>
+                                {% endif %}
                             </div>
 
-                            <!-- Simple Chart Visualization -->
-                            <!-- loop: historicalData -->
-                            <div class="flex items-end justify-between h-48 gap-2 px-2">
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 50%"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Oct</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 65%"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Nov</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 85%"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Dec</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 60%"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Jan</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 90%"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Feb</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-t-lg hover:from-yellow-600 hover:to-yellow-500 transition" style="height: 100%"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Mar</span>
-                                </div>
+                            <!-- Chart.js Visualization -->
+                            {% if price_history and price_history|length > 0 %}
+                            <div class="relative" style="height: 300px;">
+                                <canvas id="priceChart"></canvas>
                             </div>
-                            <!-- /loop: historicalData -->
+                            {% else %}
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+                                <p class="text-slate-600">No price history available</p>
+                            </div>
+                            {% endif %}
                         </div>
-                        <p class="text-sm text-slate-600">Chart updated in real-time. Historical data available from the last 6 months.</p>
+                        <p class="text-sm text-slate-600">Chart showing last 60 days of price data.</p>
                     </div>
 
                     <!-- Asset Details -->
@@ -130,78 +113,111 @@
                         <div class="grid md:grid-cols-2 gap-8">
                             <div>
                                 <p class="text-slate-600 text-sm mb-2">Type</p>
-                                <p class="text-lg font-semibold text-slate-900">Precious Metal</p>
+                                <p class="text-lg font-semibold text-slate-900">{{ asset.asset_type|title }}</p>
                             </div>
+                            {% if asset.unit_of_measurement %}
                             <div>
                                 <p class="text-slate-600 text-sm mb-2">Unit of Measurement</p>
-                                <p class="text-lg font-semibold text-slate-900">per troy ounce</p>
+                                <p class="text-lg font-semibold text-slate-900">{{ asset.unit_of_measurement }}</p>
                             </div>
+                            {% endif %}
                         </div>
-                        <p class="text-slate-700 mt-6">Safe-haven assets like gold are often used to diversify investment portfolios and protect against economic uncertainty. Historical data shows positive performance during market volatility.</p>
+                        {% if asset.description %}
+                        <p class="text-slate-700 mt-6">{{ asset.description }}</p>
+                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Sidebar -->
                 <div class="lg:col-span-1">
                     <!-- Sentiment Card -->
+                    {% if sentiment %}
                     <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Sentiment</h3>
                         <div class="mb-4">
+                            {% if sentiment.label == 'positive' %}
                             <span class="px-4 py-2 rounded-full font-semibold text-white bg-green-600">Positive</span>
+                            {% elif sentiment.label == 'negative' %}
+                            <span class="px-4 py-2 rounded-full font-semibold text-white bg-red-600">Negative</span>
+                            {% else %}
+                            <span class="px-4 py-2 rounded-full font-semibold text-white bg-gray-600">Neutral</span>
+                            {% endif %}
                         </div>
                         <div class="space-y-3">
                             <div>
                                 <p class="text-xs text-slate-600 mb-1">Sentiment Score</p>
                                 <div class="flex items-center gap-2">
                                     <div class="flex-1 bg-slate-200 rounded-full h-2">
-                                        <div class="bg-green-500 h-2 rounded-full" style="width: 82%"></div>
+                                        <div class="{% if sentiment.label == 'positive' %}bg-green-500{% elif sentiment.label == 'negative' %}bg-red-500{% else %}bg-gray-500{% endif %} h-2 rounded-full" style="width: {{ sentiment.score|int }}%"></div>
                                     </div>
-                                    <span class="text-sm font-bold">82%</span>
+                                    <span class="text-sm font-bold">{{ sentiment.score|int }}%</span>
                                 </div>
                             </div>
                             <div>
                                 <p class="text-xs text-slate-600 mb-1">Confidence</p>
                                 <div class="flex items-center gap-2">
                                     <div class="flex-1 bg-slate-200 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 88%"></div>
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ sentiment.confidence|int }}%"></div>
                                     </div>
-                                    <span class="text-sm font-bold">88%</span>
+                                    <span class="text-sm font-bold">{{ sentiment.confidence|int }}%</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    {% endif %}
 
                     <!-- Recommendation Card -->
+                    {% if recommendation %}
                     <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl border border-yellow-200 p-6 mb-6">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">AI Recommendation</h3>
                         <div class="mb-4">
-                            <span class="px-4 py-2 rounded-full font-semibold bg-green-600 text-white text-sm">Invest (Moderate)</span>
+                            {% if recommendation.recommendation_type == 'invest' %}
+                            <span class="px-4 py-2 rounded-full font-semibold bg-green-600 text-white text-sm">Invest</span>
+                            {% elif recommendation.recommendation_type == 'hold' %}
+                            <span class="px-4 py-2 rounded-full font-semibold bg-yellow-600 text-white text-sm">Hold</span>
+                            {% elif recommendation.recommendation_type == 'wait' %}
+                            <span class="px-4 py-2 rounded-full font-semibold bg-blue-600 text-white text-sm">Wait</span>
+                            {% else %}
+                            <span class="px-4 py-2 rounded-full font-semibold bg-red-600 text-white text-sm">Don't Invest</span>
+                            {% endif %}
                         </div>
                         <div class="space-y-3 mb-4">
                             <div>
                                 <p class="text-sm text-slate-600 mb-1">Risk Level</p>
+                                {% if recommendation.risk_level == 'low' %}
                                 <p class="font-bold text-green-600">Low</p>
+                                {% elif recommendation.risk_level == 'medium' %}
+                                <p class="font-bold text-yellow-600">Medium</p>
+                                {% else %}
+                                <p class="font-bold text-red-600">High</p>
+                                {% endif %}
                             </div>
                             <div>
                                 <p class="text-sm text-slate-600 mb-2">Investment Score</p>
                                 <div class="flex items-center gap-3">
                                     <div class="flex-1 bg-white rounded-full h-3">
-                                        <div class="bg-green-500 h-3 rounded-full" style="width: 76%"></div>
+                                        <div class="{% if recommendation.investment_score >= 70 %}bg-green-500{% elif recommendation.investment_score >= 40 %}bg-yellow-500{% else %}bg-red-500{% endif %} h-3 rounded-full" style="width: {{ recommendation.investment_score|int }}%"></div>
                                     </div>
-                                    <span class="text-lg font-bold">76</span>
+                                    <span class="text-lg font-bold">{{ recommendation.investment_score|int }}</span>
                                 </div>
                             </div>
                         </div>
                         <p class="text-sm text-slate-700">
-                            <strong>Why:</strong> Safe-haven asset with positive market sentiment. Strong performance amid economic uncertainty makes it a good diversification choice.
+                            <strong>Why:</strong> {% if recommendation.rationale_summary %}{{ recommendation.rationale_summary }}{% else %}Based on current market analysis and price trends.{% endif %}
                         </p>
                     </div>
+                    {% else %}
+                    <div class="bg-slate-100 rounded-xl border border-slate-200 p-6 mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">AI Recommendation</h3>
+                        <p class="text-slate-600">No recommendation available for this asset yet.</p>
+                    </div>
+                    {% endif %}
 
                     <!-- Notes Section -->
                     <div class="bg-white rounded-xl border border-slate-200 p-6">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Personal Notes</h3>
-                        <textarea id="assetNotes" placeholder="Add your personal notes about this asset..." class="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 resize-none mb-3" rows="4"></textarea>
-                        <button onclick="saveNotes()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Save Notes</button>
+                        <textarea id="assetNotes" placeholder="Add your personal notes about this asset..." class="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 resize-none mb-3" rows="4">{{ existing_notes if existing_notes else '' }}</textarea>
+                        <button onclick="saveNotes()" id="saveNotesBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Save Notes</button>
                     </div>
                 </div>
             </div>
@@ -213,25 +229,159 @@
     {% include "components/script.html" %}
     <script>
         lucide.createIcons();
-        let isBookmarked = false;
+        let isBookmarked = {{ 'true' if is_bookmarked else 'false' }};
 
-        function toggleBookmark() {
-            isBookmarked = !isBookmarked;
+        async function toggleBookmark() {
             const btn = document.getElementById('bookmarkBtn');
-            if (isBookmarked) {
-                btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-blue-600 text-white hover:bg-blue-700';
-                btn.innerHTML = '<i data-lucide="bookmark-check" class="w-5 h-5"></i><span>In Watchlist</span>';
-            } else {
-                btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-slate-100 text-slate-900 hover:bg-slate-200';
-                btn.innerHTML = '<i data-lucide="bookmark" class="w-5 h-5"></i><span>Add to Watchlist</span>';
+            btn.disabled = true;
+
+            try {
+                if (isBookmarked) {
+                    // Remove from watchlist - redirect to watchlist page to handle removal
+                    window.location.href = '/dashboard/watchlist';
+                } else {
+                    // Add to watchlist
+                    const formData = new FormData();
+                    formData.append('asset_id', {{ asset.asset_id }});
+
+                    const response = await fetch('/api/bookmark/add', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok || response.redirected) {
+                        // Update UI
+                        isBookmarked = true;
+                        btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-blue-600 text-white hover:bg-blue-700';
+                        btn.innerHTML = '<i data-lucide="bookmark-check" class="w-5 h-5"></i><span>In Watchlist</span>';
+                        lucide.createIcons();
+                    } else {
+                        alert('Failed to add to watchlist');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+            } finally {
+                btn.disabled = false;
             }
-            lucide.createIcons();
         }
 
-        function saveNotes() {
+        async function saveNotes() {
             const notes = document.getElementById('assetNotes').value;
-            alert('Notes saved: ' + notes);
+            const btn = document.getElementById('saveNotesBtn');
+            const originalText = btn.textContent;
+
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                const formData = new FormData();
+                formData.append('asset_id', {{ asset.asset_id }});
+                formData.append('notes', notes);
+
+                const response = await fetch('/api/bookmark/update-notes', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    btn.textContent = 'Saved!';
+                    btn.className = 'w-full bg-green-600 text-white py-2 rounded-lg font-semibold';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.className = 'w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition';
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Failed to save notes. Make sure the item is in your watchlist first.');
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while saving notes');
+                btn.textContent = originalText;
+            } finally {
+                btn.disabled = false;
+            }
         }
+
+        // Initialize Price Chart
+        {% if price_history and price_history|length > 0 %}
+        const priceData = {{ price_history[:60]|tojson }};
+        const sortedData = priceData.reverse(); // Oldest to newest
+
+        const ctx = document.getElementById('priceChart');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sortedData.map(p => p.date),
+                datasets: [{
+                    label: 'Price ({{ latest_price.currency if latest_price else "USD" }})',
+                    data: sortedData.map(p => p.price),
+                    borderColor: 'rgb(234, 179, 8)',
+                    backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: 'rgb(234, 179, 8)',
+                    pointHoverBorderColor: 'white',
+                    pointHoverBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        callbacks: {
+                            label: function(context) {
+                                return 'Price: ' + context.parsed.y.toFixed(2) + ' {{ latest_price.currency if latest_price else "USD" }}';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxTicksLimit: 10,
+                            color: '#64748b'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            callback: function(value) {
+                                return value.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
     </script>
 </body>
 </html>

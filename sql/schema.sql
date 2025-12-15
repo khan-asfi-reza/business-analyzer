@@ -26,9 +26,12 @@ CREATE TABLE company (
     founded_date DATE,
     description TEXT,
     market_cap DECIMAL(20, 2),
+    stock_symbol VARCHAR(20),
+    stock_exchange VARCHAR(100),
     INDEX idx_company_name (company_name),
     INDEX idx_industry (industry),
-    INDEX idx_company_type (company_type)
+    INDEX idx_company_type (company_type),
+    INDEX idx_stock_symbol (stock_symbol)
 );
 
 CREATE TABLE stock_price (

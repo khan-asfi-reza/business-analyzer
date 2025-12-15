@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search - Business Analyzer</title>
+    <title>Search{% if query %} - {{ query }}{% endif %} - Business Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/assets/css/main.css">
@@ -16,12 +16,14 @@
     <main class="flex-1">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <!-- Search Bar -->
-            <form onsubmit="handleSearchSubmit(event)" class="mb-12">
+            <form action="/dashboard/search" method="get" class="mb-12">
                 <div class="flex gap-2">
                     <div class="flex-1 relative">
                         <input
                             type="text"
+                            name="q"
                             id="searchQuery"
+                            value="{{ query }}"
                             placeholder="Search companies, assets, or commodities..."
                             class="w-full px-6 py-4 rounded-lg border-2 border-slate-200 focus:border-blue-600 focus:outline-none text-slate-900 placeholder-slate-500"
                         />
@@ -38,178 +40,128 @@
 
             <!-- Results Section -->
             <div id="resultsSection">
+                {% if query %}
                 <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-slate-900">Search Results</h2>
-                    <p class="text-slate-600 mt-1">Found 6 results</p>
+                    <h2 class="text-2xl font-bold text-slate-900">
+                        {% if results %}
+                            Search Results for "{{ query }}"
+                        {% else %}
+                            No Results for "{{ query }}"
+                        {% endif %}
+                    </h2>
+                    <p class="text-slate-600 mt-1">Found {{ results|length }} result{{ 's' if results|length != 1 else '' }}</p>
                 </div>
 
-                <!-- loop: searchResults -->
+                {% if results %}
+                <!-- Search Results Grid -->
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <a href="/dashboard/company?id=1" class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition block">
+                    {% for result in results %}
+                    {% if result.type == 'company' %}
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition">
                         <div class="flex items-start justify-between mb-4">
                             <div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-1">Apple Inc.</h3>
-                                <p class="text-slate-600 text-sm">Technology</p>
+                                <a href="/dashboard/company/{{ result.company_id }}" class="text-lg font-bold text-slate-900 hover:text-blue-600 mb-1 block">{{ result.company_name }}</a>
+                                <p class="text-slate-600 text-sm">{{ result.industry }}</p>
                             </div>
                             <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Company</span>
                         </div>
-                        <div class="mb-4">
-                            <p class="text-sm text-slate-600 mb-2">
-                                Type: <span class="font-medium text-slate-900">Public</span>
-                            </p>
-                            <p class="text-sm text-slate-600">
-                                Price: <span class="font-bold text-slate-900">$189.45</span>
-                            </p>
+                        <div class="pt-4 border-t border-slate-200 flex gap-2">
+                            <a href="/dashboard/company/{{ result.company_id }}" class="flex-1 text-center px-4 py-2 bg-blue-600 text-white font-semibold text-sm rounded-lg hover:bg-blue-700 transition">
+                                View Details
+                            </a>
+                            <form method="POST" action="/api/bookmark/add" class="flex-1">
+                                <input type="hidden" name="company_id" value="{{ result.company_id }}">
+                                <button type="submit" class="w-full px-4 py-2 bg-slate-100 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-200 transition">
+                                    + Watchlist
+                                </button>
+                            </form>
                         </div>
-                        <div class="pt-4 border-t border-slate-200">
-                            <span class="text-blue-600 hover:text-blue-700 font-semibold text-sm">View Details →</span>
-                        </div>
-                    </a>
-
-                    <a href="/dashboard/company?id=2" class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition block">
+                    </div>
+                    {% elif result.type == 'asset' %}
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition">
                         <div class="flex items-start justify-between mb-4">
                             <div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-1">Microsoft Corporation</h3>
-                                <p class="text-slate-600 text-sm">Software</p>
+                                <a href="/dashboard/asset/{{ result.asset_id }}" class="text-lg font-bold text-slate-900 hover:text-blue-600 mb-1 block">{{ result.asset_name }}</a>
+                                <p class="text-slate-600 text-sm">{{ result.asset_type|title }}</p>
                             </div>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Company</span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">Asset</span>
                         </div>
-                        <div class="mb-4">
-                            <p class="text-sm text-slate-600 mb-2">
-                                Type: <span class="font-medium text-slate-900">Public</span>
-                            </p>
-                            <p class="text-sm text-slate-600">
-                                Price: <span class="font-bold text-slate-900">$420.30</span>
-                            </p>
+                        <div class="pt-4 border-t border-slate-200 flex gap-2">
+                            <a href="/dashboard/asset/{{ result.asset_id }}" class="flex-1 text-center px-4 py-2 bg-blue-600 text-white font-semibold text-sm rounded-lg hover:bg-blue-700 transition">
+                                View Details
+                            </a>
+                            <form method="POST" action="/api/bookmark/add" class="flex-1">
+                                <input type="hidden" name="asset_id" value="{{ result.asset_id }}">
+                                <button type="submit" class="w-full px-4 py-2 bg-slate-100 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-200 transition">
+                                    + Watchlist
+                                </button>
+                            </form>
                         </div>
-                        <div class="pt-4 border-t border-slate-200">
-                            <span class="text-blue-600 hover:text-blue-700 font-semibold text-sm">View Details →</span>
-                        </div>
-                    </a>
-
-                    <a href="/dashboard/company?id=3" class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition block">
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-1">Tesla Inc.</h3>
-                                <p class="text-slate-600 text-sm">Automotive</p>
-                            </div>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Company</span>
-                        </div>
-                        <div class="mb-4">
-                            <p class="text-sm text-slate-600 mb-2">
-                                Type: <span class="font-medium text-slate-900">Public</span>
-                            </p>
-                            <p class="text-sm text-slate-600">
-                                Price: <span class="font-bold text-slate-900">$238.50</span>
-                            </p>
-                        </div>
-                        <div class="pt-4 border-t border-slate-200">
-                            <span class="text-blue-600 hover:text-blue-700 font-semibold text-sm">View Details →</span>
-                        </div>
-                    </a>
-
-                    <a href="/dashboard/company?id=4" class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition block">
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-1">Google LLC</h3>
-                                <p class="text-slate-600 text-sm">Technology</p>
-                            </div>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Company</span>
-                        </div>
-                        <div class="mb-4">
-                            <p class="text-sm text-slate-600 mb-2">
-                                Type: <span class="font-medium text-slate-900">Private</span>
-                            </p>
-                            <p class="text-sm text-slate-600">
-                                Price: <span class="font-bold text-slate-900">$156.80</span>
-                            </p>
-                        </div>
-                        <div class="pt-4 border-t border-slate-200">
-                            <span class="text-blue-600 hover:text-blue-700 font-semibold text-sm">View Details →</span>
-                        </div>
-                    </a>
-
-                    <a href="/dashboard/asset?id=5" class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition block">
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-1">Gold</h3>
-                                <p class="text-slate-600 text-sm">Precious Metals</p>
-                            </div>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Asset</span>
-                        </div>
-                        <div class="mb-4">
-                            <p class="text-sm text-slate-600 mb-2">
-                                Category: <span class="font-medium text-slate-900">Commodity</span>
-                            </p>
-                            <p class="text-sm text-slate-600">
-                                Price: <span class="font-bold text-slate-900">$2,048 per oz</span>
-                            </p>
-                        </div>
-                        <div class="pt-4 border-t border-slate-200">
-                            <span class="text-blue-600 hover:text-blue-700 font-semibold text-sm">View Details →</span>
-                        </div>
-                    </a>
-
-                    <a href="/dashboard/asset?id=6" class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg hover:border-blue-200 transition block">
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-1">Silver</h3>
-                                <p class="text-slate-600 text-sm">Precious Metals</p>
-                            </div>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Asset</span>
-                        </div>
-                        <div class="mb-4">
-                            <p class="text-sm text-slate-600 mb-2">
-                                Category: <span class="font-medium text-slate-900">Commodity</span>
-                            </p>
-                            <p class="text-sm text-slate-600">
-                                Price: <span class="font-bold text-slate-900">$24.50 per oz</span>
-                            </p>
-                        </div>
-                        <div class="pt-4 border-t border-slate-200">
-                            <span class="text-blue-600 hover:text-blue-700 font-semibold text-sm">View Details →</span>
-                        </div>
-                    </a>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
-                <!-- /loop: searchResults -->
+                {% else %}
+                <!-- Empty State -->
+                <div class="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="search-x" class="w-8 h-8 text-slate-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">No Results Found</h3>
+                    <p class="text-slate-600 mb-6">We couldn't find any companies or assets matching "{{ query }}"</p>
+                    <p class="text-sm text-slate-500">Try searching with different keywords or browse popular searches below.</p>
+                </div>
+                {% endif %}
+                {% else %}
+                <!-- No Search Query -->
+                <div class="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="search" class="w-8 h-8 text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Start Searching</h3>
+                    <p class="text-slate-600 mb-6">Enter a company name, asset, or commodity to search</p>
+                    <p class="text-sm text-slate-500">Or try one of the popular searches below.</p>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Suggested Searches -->
             <div class="mt-16 pt-12 border-t border-slate-200" id="popularSearches">
                 <h3 class="text-2xl font-bold text-slate-900 mb-6">Popular Searches</h3>
-                <!-- loop: popularSearchTerms -->
                 <div class="grid md:grid-cols-3 gap-4">
-                    <button onclick="searchTerm('Apple')" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left">
+                    <a href="/dashboard/search?q=Apple" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left block">
                         <p class="font-medium text-slate-900">Apple</p>
                         <p class="text-sm text-slate-600">Popular search</p>
-                    </button>
-                    <button onclick="searchTerm('Tesla')" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left">
+                    </a>
+                    <a href="/dashboard/search?q=Tesla" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left block">
                         <p class="font-medium text-slate-900">Tesla</p>
                         <p class="text-sm text-slate-600">Popular search</p>
-                    </button>
-                    <button onclick="searchTerm('Gold')" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left">
+                    </a>
+                    <a href="/dashboard/search?q=Gold" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left block">
                         <p class="font-medium text-slate-900">Gold</p>
                         <p class="text-sm text-slate-600">Popular search</p>
-                    </button>
-                    <button onclick="searchTerm('Microsoft')" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left">
+                    </a>
+                    <a href="/dashboard/search?q=Microsoft" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left block">
                         <p class="font-medium text-slate-900">Microsoft</p>
                         <p class="text-sm text-slate-600">Popular search</p>
-                    </button>
-                    <button onclick="searchTerm('Amazon')" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left">
-                        <p class="font-medium text-slate-900">Amazon</p>
+                    </a>
+                    <a href="/dashboard/search?q=Grameenphone" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left block">
+                        <p class="font-medium text-slate-900">Grameenphone</p>
                         <p class="text-sm text-slate-600">Popular search</p>
-                    </button>
-                    <button onclick="searchTerm('Silver')" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left">
-                        <p class="font-medium text-slate-900">Silver</p>
+                    </a>
+                    <a href="/dashboard/search?q=Bitcoin" class="p-4 bg-slate-50 hover:bg-blue-50 rounded-lg border border-slate-200 hover:border-blue-300 transition text-left block">
+                        <p class="font-medium text-slate-900">Bitcoin</p>
                         <p class="text-sm text-slate-600">Popular search</p>
-                    </button>
+                    </a>
                 </div>
-                <!-- /loop: popularSearchTerms -->
             </div>
         </div>
     </main>
 
     {% include "components/footer.html" %}
     {% include "components/script.html" %}
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

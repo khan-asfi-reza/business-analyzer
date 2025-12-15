@@ -1,14 +1,16 @@
 """
 Asset service - Asset data business logic
 """
+import datetime
 from typing import Optional, Dict, Any, List
-
+import caseutil
 from db import fetch_one, fetch_all
+from utils.helpers import humanize_date
 
 
 def get_asset_by_id(db, asset_id: int) -> Optional[Dict[str, Any]]:
     """Get asset details by ID"""
-    return fetch_one(
+    data = fetch_one(
         db,
         """
         SELECT asset_id, asset_name, asset_type, unit_of_measurement,
@@ -18,7 +20,14 @@ def get_asset_by_id(db, asset_id: int) -> Optional[Dict[str, Any]]:
         """,
         (asset_id,)
     )
+    if data:
+        if data["asset_type"]:
+            data["asset_type"] = caseutil.to_sentence(data["asset_type"])
 
+        if data["unit_of_measurement"]:
+            data["unit_of_measurement"] = caseutil.to_sentence(data["unit_of_measurement"])
+
+    return data
 
 def search_assets(db, query: str, limit: int = 20) -> List[Dict[str, Any]]:
     """Search assets by name or type"""
@@ -51,7 +60,7 @@ def get_latest_asset_price(db, asset_id: int) -> Optional[Dict[str, Any]]:
 
 def get_asset_prices(db, asset_id: int, days: int = 60) -> List[Dict[str, Any]]:
     """Get asset price history for specified number of days"""
-    return fetch_all(
+    data = fetch_all(
         db,
         """
         SELECT date, price, currency
@@ -61,6 +70,11 @@ def get_asset_prices(db, asset_id: int, days: int = 60) -> List[Dict[str, Any]]:
         """,
         (asset_id, days)
     )
+    for item in data:
+        item["data"] = humanize_date(item["date"])
+        item["price"] = float(item["price"])
+
+    return data
 
 
 def get_asset_recommendation(db, asset_id: int) -> Optional[Dict[str, Any]]:

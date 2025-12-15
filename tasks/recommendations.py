@@ -2,11 +2,12 @@
 Investment recommendation Celery tasks
 """
 from celery_app import app
-from db import get_db, fetch_all, execute, transaction
+from db import get_db, fetch_all, fetch_one, execute, transaction
 from services.recommendation_engine import (
     calculate_company_recommendation_with_ai,
     calculate_asset_recommendation
 )
+from ai import generate_investment_rationale
 
 
 @app.task(name="tasks.recommendations.update_company_recommendations")
@@ -40,23 +41,47 @@ def update_company_recommendations():
                 # Calculate recommendation
                 recommendation = calculate_company_recommendation_with_ai(db, company['company_id'])
 
+                # Generate AI-powered rationale using Gemini
+                price_trend = "upward" if recommendation['price_score'] > 55 else ("downward" if recommendation['price_score'] < 45 else "stable")
+                financial_health = "strong" if recommendation['financial_score'] > 60 else ("weak" if recommendation['financial_score'] < 40 else "moderate")
+                sentiment = recommendation.get('sentiment_score', 50)
+                sentiment_label = "positive" if sentiment > 60 else ("negative" if sentiment < 40 else "neutral")
+
+                rationale_result = generate_investment_rationale(
+                    name=company['company_name'],
+                    recommendation_type=recommendation['recommendation_type'],
+                    risk_level=recommendation['risk_level'],
+                    investment_score=recommendation['investment_score'],
+                    price_trend=price_trend,
+                    financial_health=financial_health,
+                    sentiment=sentiment_label
+                )
+
+                # Use AI-generated rationale or fallback to simple summary
+                if not rationale_result.get('error'):
+                    rationale_summary = rationale_result['rationale']
+                else:
+                    rationale_summary = (
+                        f"Price Score: {recommendation.get('price_score', 0)}, "
+                        f"Financial Score: {recommendation.get('financial_score', 0)}, "
+                        f"Sentiment Score: {recommendation.get('sentiment_score', 0)}"
+                    )
+
                 # Store recommendation
                 with transaction(db):
                     execute(
                         db,
                         """
                         INSERT INTO investment_recommendation
-                        (company_id, recommendation_type, investment_score, risk_level, rationale_summary)
-                        VALUES (%s, %s, %s, %s, %s)
+                        (company_id, recommendation_type, investment_score, risk_level, rationale_summary, recommendation_date)
+                        VALUES (%s, %s, %s, %s, %s, NOW())
                         """,
                         (
                             company['company_id'],
                             recommendation['recommendation_type'],
                             recommendation['investment_score'],
                             recommendation['risk_level'],
-                            f"Price Score: {recommendation.get('price_score', 0)}, "
-                            f"Financial Score: {recommendation.get('financial_score', 0)}, "
-                            f"Sentiment Score: {recommendation.get('sentiment_score', 0)}"
+                            rationale_summary
                         )
                     )
 

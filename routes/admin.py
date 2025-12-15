@@ -1,17 +1,21 @@
+from typing import Any
+
 import bcrypt
 from fastapi import Depends, Form, APIRouter
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse
-
+from tasks.stock_data import fetch_stock_prices
 from db import get_db_dependency, fetch_one, fetch_all, transaction, execute
 from routes.base import templates, get_auth_user
 
 router = APIRouter()
 
 @router.get("", response_class=HTMLResponse)
-async def admin_dashboard(request: Request, db = Depends(get_db_dependency)):
+async def admin_dashboard(request: Request, db = Depends(get_db_dependency), user = Depends(get_auth_user)):
     """Admin dashboard overview page"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+    
 
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
@@ -36,30 +40,28 @@ async def admin_dashboard(request: Request, db = Depends(get_db_dependency)):
 @router.get("/users", response_class=HTMLResponse,)
 async def admin_users(
     request: Request,
-    db = Depends(get_db_dependency),
+    db = Depends(get_db_dependency), 
+    user = Depends(get_auth_user),
     q: str = "",
     role: str = "",
     sort: str = "registration_date_desc",
     page: int = 1
 ):
     """Admin users page - list all users with q, filtering, sorting, and pagination"""
-    # Check authentication and admin role
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
 
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
-    # Pagination settings
     per_page = 20
     offset = (page - 1) * per_page
 
-    # Build WHERE clause
     where_clauses = []
     params = []
 
     if q:
         where_clauses.append("(user_id = %s OR username LIKE %s OR email LIKE %s OR full_name LIKE %s)")
-        # Try to parse q as integer for ID q
         try:
             q_id = int(q)
             params.extend([q_id, f"%{q}%", f"%{q}%", f"%{q}%"])
@@ -72,7 +74,6 @@ async def admin_users(
 
     where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
 
-    # Parse sort parameter (format: field_direction)
     valid_sorts = {
         "user_id_asc": ("user_id", "ASC"),
         "user_id_desc": ("user_id", "DESC"),
@@ -125,7 +126,8 @@ async def admin_users(
 @router.get("/companies", response_class=HTMLResponse)
 async def admin_companies(
     request: Request,
-    db = Depends(get_db_dependency),
+    db = Depends(get_db_dependency), 
+    user = Depends(get_auth_user),
     q: str = "",
     company_type: str = "",
     industry: str = "",
@@ -133,7 +135,8 @@ async def admin_companies(
     page: int = 1
 ):
     """Admin companies page - list all companies with search, filtering, sorting, and pagination"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
 
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
@@ -189,7 +192,7 @@ async def admin_companies(
     query = f"""
         SELECT
             company_id, company_name, company_type, industry,
-            market_cap, founded_date, logo_url
+            market_cap, founded_date, logo_url, stock_symbol, stock_exchange
         FROM company
         {where_sql}
         ORDER BY {sort_by} {sort_order}
@@ -222,23 +225,23 @@ async def admin_companies(
 @router.get("/assets", response_class=HTMLResponse)
 async def admin_assets(
     request: Request,
-    db = Depends(get_db_dependency),
+    db = Depends(get_db_dependency), 
+    user = Depends(get_auth_user),
     q: str = "",
     asset_type: str = "",
     sort: str = "asset_name_asc",
     page: int = 1
 ):
     """Admin assets page - list all assets with search, filtering, sorting, and pagination"""
-    user = get_auth_user(request)
+    
+    if isinstance(user, RedirectResponse):
+        return user
 
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
-    # Pagination settings
     per_page = 20
     offset = (page - 1) * per_page
-
-    # Build WHERE clause
     where_clauses = []
     params = []
 
@@ -256,7 +259,6 @@ async def admin_assets(
 
     where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
 
-    # Parse sort parameter (format: field_direction)
     valid_sorts = {
         "asset_id_asc": ("asset_id", "ASC"),
         "asset_id_desc": ("asset_id", "DESC"),
@@ -270,12 +272,10 @@ async def admin_assets(
 
     sort_by, sort_order = valid_sorts.get(sort, ("asset_name", "ASC"))
 
-    # Get total count
     count_query = f"SELECT COUNT(*) as count FROM asset {where_sql}"
     total_assets = fetch_one(db, count_query, tuple(params))['count']
     total_pages = (total_assets + per_page - 1) // per_page
 
-    # Get assets with pagination
     query = f"""
         SELECT
             asset_id, asset_name, asset_type,
@@ -288,7 +288,7 @@ async def admin_assets(
     params.extend([per_page, offset])
     assets = fetch_all(db, query, tuple(params))
 
-    asset_types = fetch_all(db, "SELECT DISTINCT asset_type FROM asset WHERE asset_type IS NOT NULL ORDER BY asset_type", ())
+    asset_types = fetch_all(db, "SELECT DISTINCT asset_type FROM asset WHERE asset_type <> '' ORDER BY asset_type", ())
 
     return templates.TemplateResponse(
         "admin_assets.html",
@@ -308,9 +308,10 @@ async def admin_assets(
 
 
 @router.get("/content", response_class=HTMLResponse)
-async def admin_content(request: Request, db = Depends(get_db_dependency)):
+async def admin_content(request: Request, db = Depends(get_db_dependency), user = Depends(get_auth_user)):
     """Admin content page - list all scraped content"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
 
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
@@ -337,9 +338,11 @@ async def admin_content(request: Request, db = Depends(get_db_dependency)):
 
 
 @router.get("/users/add", response_class=HTMLResponse)
-async def admin_user_add_form(request: Request):
+async def admin_user_add_form(request: Request, user=Depends(get_auth_user)):
     """Show add user form"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -357,10 +360,13 @@ async def admin_user_add_submit(
     full_name: str = Form(...),
     password: str = Form(...),
     role: str = Form(...),
+    user=Depends(get_auth_user),
     db = Depends(get_db_dependency)
 ):
     """Handle add user form submission"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -372,7 +378,6 @@ async def admin_user_add_submit(
             {"request": request, "user": user, "form_user": None, "mode": "add", "error": "Username or email already exists"}
         )
 
-    # Hash password
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     # Insert user
@@ -387,9 +392,11 @@ async def admin_user_add_submit(
 
 
 @router.get("/users/edit/{user_id}", response_class=HTMLResponse)
-async def admin_user_edit_form(request: Request, user_id: int, db = Depends(get_db_dependency)):
+async def admin_user_edit_form(request: Request, user_id: int, db = Depends(get_db_dependency), user = Depends(get_auth_user)):
     """Show edit user form"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -412,14 +419,16 @@ async def admin_user_edit_submit(
     full_name: str = Form(...),
     password: str = Form(None),
     role: str = Form(...),
-    db = Depends(get_db_dependency)
+    db = Depends(get_db_dependency),
+    user=Depends(get_auth_user),
 ):
     """Handle edit user form submission"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
-    # Check if username or email already exists for other users
     existing = fetch_one(
         db,
         "SELECT user_id FROM user WHERE (username = %s OR email = %s) AND user_id != %s",
@@ -452,9 +461,11 @@ async def admin_user_edit_submit(
 
 
 @router.get("/companies/add", response_class=HTMLResponse)
-async def admin_company_add_form(request: Request):
+async def admin_company_add_form(request: Request, user=Depends(get_auth_user)):
     """Show add company form"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -474,34 +485,41 @@ async def admin_company_add_submit(
     founded_date: str = Form(None),
     description: str = Form(None),
     market_cap: float = Form(None),
-    db = Depends(get_db_dependency)
+    stock_symbol: str = Form(None),
+    stock_exchange: str = Form(None),
+    db = Depends(get_db_dependency),
+    user=Depends(get_auth_user),
 ):
     """Handle add company form submission"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
     with transaction(db):
         execute(
             db,
-            """INSERT INTO company (company_name, company_type, industry, logo_url, founded_date, description, market_cap)
-               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-            (company_name, company_type, industry, logo_url or None, founded_date or None, description or None, market_cap)
+            """INSERT INTO company (company_name, company_type, industry, logo_url, founded_date, description, market_cap, stock_symbol, stock_exchange)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (company_name, company_type, industry, logo_url or None, founded_date or None, description or None, market_cap, stock_symbol or None, stock_exchange or None)
         )
 
     return RedirectResponse(url="/admin/companies?success=Company added successfully", status_code=303)
 
 
 @router.get("/companies/edit/{company_id}", response_class=HTMLResponse)
-async def admin_company_edit_form(request: Request, company_id: int, db = Depends(get_db_dependency)):
+async def admin_company_edit_form(request: Request, company_id: int, db = Depends(get_db_dependency), user = Depends(get_auth_user)):
     """Show edit company form"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
     company = fetch_one(
         db,
-        "SELECT company_id, company_name, company_type, industry, logo_url, founded_date, description, market_cap FROM company WHERE company_id = %s",
+        "SELECT company_id, company_name, company_type, industry, logo_url, founded_date, description, market_cap, stock_symbol, stock_exchange FROM company WHERE company_id = %s",
         (company_id,)
     )
     if not company:
@@ -524,10 +542,15 @@ async def admin_company_edit_submit(
     founded_date: str = Form(None),
     description: str = Form(None),
     market_cap: float = Form(None),
-    db = Depends(get_db_dependency)
+    stock_symbol: str = Form(None),
+    stock_exchange: str = Form(None),
+    db = Depends(get_db_dependency),
+    user=Depends(get_auth_user),
 ):
     """Handle edit company form submission"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -535,17 +558,19 @@ async def admin_company_edit_submit(
         execute(
             db,
             """UPDATE company SET company_name = %s, company_type = %s, industry = %s, logo_url = %s,
-               founded_date = %s, description = %s, market_cap = %s WHERE company_id = %s""",
-            (company_name, company_type, industry, logo_url or None, founded_date or None, description or None, market_cap, company_id)
+               founded_date = %s, description = %s, market_cap = %s, stock_symbol = %s, stock_exchange = %s WHERE company_id = %s""",
+            (company_name, company_type, industry, logo_url or None, founded_date or None, description or None, market_cap, stock_symbol or None, stock_exchange or None, company_id)
         )
 
     return RedirectResponse(url="/admin/companies?success=Company updated successfully", status_code=303)
 
 
 @router.get("/assets/add", response_class=HTMLResponse)
-async def admin_asset_add_form(request: Request):
+async def admin_asset_add_form(request: Request, user=Depends(get_auth_user),):
     """Show add asset form"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -563,10 +588,13 @@ async def admin_asset_add_submit(
     unit_of_measurement: str = Form(...),
     logo_url: str = Form(None),
     description: str = Form(None),
-    db = Depends(get_db_dependency)
+    db = Depends(get_db_dependency),
+    user=Depends(get_auth_user),
 ):
     """Handle add asset form submission"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -582,9 +610,11 @@ async def admin_asset_add_submit(
 
 
 @router.get("/assets/edit/{asset_id}", response_class=HTMLResponse)
-async def admin_asset_edit_form(request: Request, asset_id: int, db = Depends(get_db_dependency)):
+async def admin_asset_edit_form(request: Request, asset_id: int, db = Depends(get_db_dependency), user = Depends(get_auth_user)):
     """Show edit asset form"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -611,10 +641,13 @@ async def admin_asset_edit_submit(
     unit_of_measurement: str = Form(...),
     logo_url: str = Form(None),
     description: str = Form(None),
-    db = Depends(get_db_dependency)
+    db = Depends(get_db_dependency),
+    user=Depends(get_auth_user),
 ):
     """Handle edit asset form submission"""
-    user = get_auth_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("role") != "Admin":
         return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
 
@@ -627,3 +660,151 @@ async def admin_asset_edit_submit(
         )
 
     return RedirectResponse(url="/admin/assets?success=Asset updated successfully", status_code=303)
+
+
+@router.get("/companies/{company_id}/detail", response_class=HTMLResponse)
+async def admin_company_detail(
+    request: Request,
+    company_id: int,
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user),
+    date_from: str = "",
+    date_to: str = ""
+):
+    """
+    Shows company detail page with recommendations and news
+    """
+    if isinstance(user, RedirectResponse):
+        return user
+
+    if user.get("role") != "Admin":
+        return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=403)
+
+    company = fetch_one(
+        db,
+        "SELECT company_id, company_name, company_type, industry, logo_url, founded_date, description, market_cap, stock_symbol, stock_exchange FROM company WHERE company_id = %s",
+        (company_id,)
+    )
+
+    if not company:
+        return templates.TemplateResponse("404.html", {"request": request, "user": user}, status_code=404)
+
+    where_clauses = []
+    params: list[Any] = [company_id]
+
+    if date_from:
+        where_clauses.append("recommendation_date >= %s")
+        params.append(date_from)
+
+    if date_to:
+        where_clauses.append("recommendation_date <= %s")
+        params.append(date_to)
+
+    where_sql = "AND " + " AND ".join(where_clauses) if where_clauses else ""
+
+    recommendations = fetch_all(
+        db,
+        f"""
+        SELECT recommendation_id, recommendation_type, investment_score, risk_level,
+               expected_return, rationale_summary, recommendation_date
+        FROM investment_recommendation
+        WHERE company_id = %s {where_sql}
+        ORDER BY recommendation_date DESC LIMIT 50
+        """,
+        tuple(params)
+    )
+
+    news_items = fetch_all(
+        db,
+        """
+        SELECT sc.content_id, sc.title, sc.source_name, sc.publish_date, sc.source_url,
+               SUBSTRING(sc.content_text, 1, 200) as excerpt,
+               sa.sentiment_label, sa.sentiment_score
+        FROM scraped_content sc
+        LEFT JOIN sentiment_analysis sa ON sc.content_id = sa.content_id
+        WHERE sc.company_id = %s
+        ORDER BY sc.publish_date DESC
+        LIMIT 50
+        """,
+        (company_id,)
+    )
+
+    return templates.TemplateResponse(
+        "admin_company_detail.html",
+        {
+            "request": request,
+            "user": user,
+            "company": company,
+            "recommendations": recommendations,
+            "news_items": news_items,
+            "date_from": date_from,
+            "date_to": date_to
+        }
+    )
+
+
+@router.post("/companies/{company_id}/fetch-prices")
+async def admin_company_fetch_prices(
+    request: Request,
+    company_id: int,
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
+    """
+    Fetches stock prices for a company using its database stock_symbol
+    """
+    if isinstance(user, RedirectResponse):
+        return user
+
+    if user.get("role") != "Admin":
+        return RedirectResponse(url="/admin", status_code=303)
+
+    company = fetch_one(db, "SELECT stock_symbol, stock_exchange FROM company WHERE company_id = %s", (company_id,))
+
+    if not company or not company.get('stock_symbol'):
+        return RedirectResponse(
+            url=f"/admin/companies/{company_id}/detail?error=Stock symbol not set for this company",
+            status_code=303
+        )
+
+
+
+    ticker_symbol = company['stock_symbol']
+    fetch_stock_prices.apply_async(
+        kwargs=dict(
+            company_id=company_id,
+            ticker_symbol=ticker_symbol,
+            days=60,
+        )
+    )
+
+
+    return RedirectResponse(
+        url=f"/admin/companies/{company_id}/detail?success=Stock prices fetch started for {ticker_symbol}",
+        status_code=303
+    )
+
+
+@router.post("/companies/{company_id}/run-recommendation")
+async def admin_company_run_recommendation(
+    request: Request,
+    company_id: int,
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
+    """
+    Runs AI-powered recommendation generation for a company
+    """
+    if isinstance(user, RedirectResponse):
+        return user
+
+    if user.get("role") != "Admin":
+        return RedirectResponse(url="/admin", status_code=303)
+
+    from tasks.recommendations import update_single_company
+    update_single_company.apply_async(kwargs=dict(company_id=company_id))
+
+    return RedirectResponse(
+        url=f"/admin/companies/{company_id}/detail?success=Recommendation generation started",
+        status_code=303
+    )

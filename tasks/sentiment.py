@@ -1,25 +1,18 @@
-"""
-Sentiment analysis Celery tasks
-"""
+
 from celery_app import app
-from db import get_db, fetch_all, execute, transaction
-from ai.ai_service import AIService
+from db import get_db, fetch_all, execute, transaction, fetch_one
+from ai import classify_sentiment
 
 
 @app.task(name="tasks.sentiment.analyze_new_content")
 def analyze_new_content():
     """
-    Find scraped_content with no sentiment_analysis and analyze them.
+    Find scraped_content with no sentiment_analysis and analyze them using Gemini.
 
-    This task:
-    1. Finds content without sentiment analysis
-    2. Calls AIService().classify_sentiment()
-    3. Stores results in sentiment_analysis table
     """
     print("Starting sentiment analysis for new content...")
 
     with get_db() as db:
-        # Find content without sentiment analysis
         unanalyzed_content = fetch_all(
             db,
             """
@@ -36,36 +29,36 @@ def analyze_new_content():
             print("No new content to analyze.")
             return {"analyzed_count": 0}
 
-        # Initialize AI service with default provider (HuggingFace)
-        ai_service = AIService()
         analyzed_count = 0
 
         for content in unanalyzed_content:
             try:
-                # Combine title and content for analysis
                 text = f"{content['title']}. {content['content_text']}"
 
-                # Classify sentiment
-                result = ai_service.classify_sentiment(text)
+                result = classify_sentiment(text)
 
-                # Store sentiment analysis
+                if result.get('error'):
+                    print(f"Error analyzing content {content['content_id']}: {result['error']}")
+                    continue
+
                 with transaction(db):
                     execute(
                         db,
                         """
                         INSERT INTO sentiment_analysis
-                        (content_id, sentiment_score, sentiment_label, confidence_level)
-                        VALUES (%s, %s, %s, %s)
+                        (content_id, sentiment_score, sentiment_label, confidence_level, analysis_date)
+                        VALUES (%s, %s, %s, %s, NOW())
                         """,
                         (
                             content['content_id'],
                             result['sentiment_score'],
                             result['sentiment_label'],
-                            result['confidence']
+                            result['confidence_level']
                         )
                     )
 
                 analyzed_count += 1
+                print(f"Analyzed content {content['content_id']}: {result['sentiment_label']}")
 
             except Exception as e:
                 print(f"Error analyzing content {content['content_id']}: {e}")
@@ -78,7 +71,7 @@ def analyze_new_content():
 @app.task(name="tasks.sentiment.analyze_single_content")
 def analyze_single_content(content_id: int):
     """
-    Analyze sentiment for a single piece of content.
+    Analyze sentiment for a single piece of content using Gemini.
 
     Args:
         content_id: Content ID to analyze
@@ -86,7 +79,6 @@ def analyze_single_content(content_id: int):
     print(f"Analyzing sentiment for content ID: {content_id}")
 
     with get_db() as db:
-        # Get content
         content = fetch_one(
             db,
             "SELECT content_id, title, content_text FROM scraped_content WHERE content_id = %s",
@@ -97,34 +89,32 @@ def analyze_single_content(content_id: int):
             print(f"Content {content_id} not found.")
             return {"success": False, "error": "Content not found"}
 
-        # Initialize AI service
-        ai_service = AIService()
-
-        # Combine title and content
         text = f"{content['title']}. {content['content_text']}"
 
-        # Classify sentiment
-        result = ai_service.classify_sentiment(text)
+        result = classify_sentiment(text)
 
-        # Store sentiment analysis
+        if result.get('error'):
+            print(f"Error analyzing content {content_id}: {result['error']}")
+            return {"success": False, "error": result['error']}
+
         with transaction(db):
             execute(
                 db,
                 """
                 INSERT INTO sentiment_analysis
-                (content_id, sentiment_score, sentiment_label, confidence_level)
-                VALUES (%s, %s, %s, %s)
+                (content_id, sentiment_score, sentiment_label, confidence_level, analysis_date)
+                VALUES (%s, %s, %s, %s, NOW())
                 ON DUPLICATE KEY UPDATE
                     sentiment_score = VALUES(sentiment_score),
                     sentiment_label = VALUES(sentiment_label),
                     confidence_level = VALUES(confidence_level),
-                    analysis_date = CURRENT_TIMESTAMP
+                    analysis_date = NOW()
                 """,
                 (
                     content_id,
                     result['sentiment_score'],
                     result['sentiment_label'],
-                    result['confidence']
+                    result['confidence_level']
                 )
             )
 

@@ -17,7 +17,8 @@ app = Celery(
     include=[
         "tasks.scraping",
         "tasks.sentiment",
-        "tasks.recommendations"
+        "tasks.recommendations",
+        "tasks.stock_data"
     ]
 )
 

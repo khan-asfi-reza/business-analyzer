@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Inc. - Business Analyzer</title>
+    <title>{{ company.company_name }} - Business Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
@@ -19,33 +20,39 @@
             <div class="bg-white rounded-xl border border-slate-200 p-8 mb-8">
                 <div class="flex items-start justify-between mb-6">
                     <div class="flex gap-6">
-                        <img src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=200&q=80" alt="Apple Inc." class="w-20 h-20 rounded-lg object-cover" />
+                        {% if company.logo_url %}
+                        <img src="{{ company.logo_url }}" alt="{{ company.company_name }}" class="w-20 h-20 rounded-lg object-cover" />
+                        {% else %}
+                        <div class="w-20 h-20 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <i data-lucide="building-2" class="w-10 h-10 text-blue-600"></i>
+                        </div>
+                        {% endif %}
                         <div>
-                            <h1 class="text-4xl font-bold text-slate-900 mb-2">Apple Inc.</h1>
+                            <h1 class="text-4xl font-bold text-slate-900 mb-2">{{ company.company_name }}</h1>
                             <div class="flex gap-3 flex-wrap">
-                                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">Public</span>
-                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">Technology</span>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">{{ company.company_type|title }}</span>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">{{ company.industry }}</span>
                             </div>
                         </div>
                     </div>
-                    <button onclick="toggleBookmark()" id="bookmarkBtn" class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-slate-100 text-slate-900 hover:bg-slate-200">
-                        <i data-lucide="bookmark" class="w-5 h-5"></i>
-                        <span>Add to Watchlist</span>
+                    <button onclick="toggleBookmark()" id="bookmarkBtn" class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition {% if is_bookmarked %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-slate-100 text-slate-900 hover:bg-slate-200{% endif %}">
+                        <i data-lucide="{% if is_bookmarked %}bookmark-check{% else %}bookmark{% endif %}" class="w-5 h-5"></i>
+                        <span>{% if is_bookmarked %}In Watchlist{% else %}Add to Watchlist{% endif %}</span>
                     </button>
                 </div>
 
                 <div class="grid md:grid-cols-3 gap-6 pt-6 border-t border-slate-200">
                     <div>
                         <p class="text-slate-600 text-sm mb-1">Founded</p>
-                        <p class="text-lg font-semibold text-slate-900">1976</p>
+                        <p class="text-lg font-semibold text-slate-900">{% if company.founded_date %}{{ company.founded_date.year }}{% else %}N/A{% endif %}</p>
                     </div>
                     <div>
                         <p class="text-slate-600 text-sm mb-1">Market Cap</p>
-                        <p class="text-lg font-semibold text-slate-900">$3.2 Trillion</p>
+                        <p class="text-lg font-semibold text-slate-900">{% if company.market_cap %}{{ company.market_cap }}{% else %}N/A{% endif %}</p>
                     </div>
                     <div>
                         <p class="text-slate-600 text-sm mb-1">Description</p>
-                        <p class="text-slate-700">Apple Inc. is an American technology company that designs, manufactures, and markets mobile devices, personal computers, and software.</p>
+                        <p class="text-slate-700">{% if company.description %}{{ company.description }}{% else %}No description available{% endif %}</p>
                     </div>
                 </div>
             </div>
@@ -58,129 +65,141 @@
                         <h2 class="text-2xl font-bold text-slate-900 mb-6">Price Trend</h2>
                         <div class="mb-6">
                             <div class="flex items-baseline gap-2 mb-6">
-                                <span class="text-4xl font-bold text-slate-900">$189.45</span>
-                                <span class="text-green-600 font-semibold text-lg">+5.2% this month</span>
+                                {% if latest_price %}
+                                <span class="text-4xl font-bold text-slate-900">{{ "%.2f"|format(latest_price.close_price) }} {{ latest_price.currency }}</span>
+                                {% else %}
+                                <span class="text-4xl font-bold text-slate-900">N/A</span>
+                                {% endif %}
                             </div>
 
-                            <!-- Simple Chart Visualization -->
-                            <!-- loop: priceData -->
-                            <div class="flex items-end justify-between h-48 gap-2 px-2">
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 60%" title="Oct: $165.2"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Oct</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 70%" title="Nov: $172.5"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Nov</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 100%" title="Dec: $189.45"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Dec</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 75%" title="Jan: $175.3"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Jan</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 85%" title="Feb: $182.8"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Feb</span>
-                                </div>
-                                <div class="flex-1 flex flex-col items-center gap-2">
-                                    <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 hover:to-blue-500 transition" style="height: 100%" title="Mar: $189.45"></div>
-                                    <span class="text-xs text-slate-600 font-medium">Mar</span>
-                                </div>
+                            <!-- Chart.js Visualization -->
+                            {% if price_history and price_history|length > 0 %}
+                            <div class="relative" style="height: 300px;">
+                                <canvas id="priceChart"></canvas>
                             </div>
-                            <!-- /loop: priceData -->
+                            {% else %}
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+                                <p class="text-slate-600">No price history available</p>
+                            </div>
+                            {% endif %}
                         </div>
-                        <p class="text-sm text-slate-600">Chart updated in real-time. Historical data available from the last 6 months.</p>
+                        <p class="text-sm text-slate-600">Chart showing last 30 days of price data.</p>
                     </div>
 
                     <!-- Financial Summary -->
                     <div class="bg-white rounded-xl border border-slate-200 p-8 mb-8">
                         <h2 class="text-2xl font-bold text-slate-900 mb-6">Financial Summary</h2>
+                        {% if financial_statement %}
                         <div class="grid md:grid-cols-2 gap-8">
                             <div>
                                 <p class="text-slate-600 text-sm mb-2">Revenue</p>
-                                <p class="text-3xl font-bold text-slate-900 mb-1">$394.3 Billion</p>
-                                <p class="text-green-600 font-semibold text-sm flex items-center gap-1">
-                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
-                                    +5.5%
-                                </p>
+                                <p class="text-3xl font-bold text-slate-900 mb-1">{{ "%.2f"|format(financial_statement.revenue / 1000000000) }}B {{ financial_statement.currency }}</p>
                             </div>
                             <div>
                                 <p class="text-slate-600 text-sm mb-2">Profit</p>
-                                <p class="text-3xl font-bold text-slate-900 mb-1">$99.8 Billion</p>
-                                <p class="text-green-600 font-semibold text-sm flex items-center gap-1">
-                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
-                                    +4.2%
-                                </p>
+                                <p class="text-3xl font-bold text-slate-900 mb-1">{{ "%.2f"|format(financial_statement.profit / 1000000000) }}B {{ financial_statement.currency }}</p>
                             </div>
                         </div>
-                        <p class="text-sm text-slate-600 mt-6 pt-6 border-t border-slate-200">Period: FY 2024</p>
+                        <p class="text-sm text-slate-600 mt-6 pt-6 border-t border-slate-200">
+                            Period: {{ financial_statement.statement_type|title }}
+                            ({{ financial_statement.period_start_date }} to {{ financial_statement.period_end_date }})
+                        </p>
+                        {% else %}
+                        <p class="text-slate-600">No financial data available</p>
+                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Sidebar -->
                 <div class="lg:col-span-1">
                     <!-- Sentiment Card -->
+                    {% if sentiment %}
                     <div class="bg-white rounded-xl border border-slate-200 p-6 mb-6">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Sentiment</h3>
                         <div class="mb-4">
+                            {% if sentiment.label == 'positive' %}
                             <span class="px-4 py-2 rounded-full font-semibold text-white bg-green-600">Positive</span>
+                            {% elif sentiment.label == 'negative' %}
+                            <span class="px-4 py-2 rounded-full font-semibold text-white bg-red-600">Negative</span>
+                            {% else %}
+                            <span class="px-4 py-2 rounded-full font-semibold text-white bg-gray-600">Neutral</span>
+                            {% endif %}
                         </div>
                         <div class="space-y-3">
                             <div>
                                 <p class="text-xs text-slate-600 mb-1">Sentiment Score</p>
                                 <div class="flex items-center gap-2">
                                     <div class="flex-1 bg-slate-200 rounded-full h-2">
-                                        <div class="bg-green-500 h-2 rounded-full" style="width: 78%"></div>
+                                        <div class="{% if sentiment.label == 'positive' %}bg-green-500{% elif sentiment.label == 'negative' %}bg-red-500{% else %}bg-gray-500{% endif %} h-2 rounded-full" style="width: {{ sentiment.score|int }}%"></div>
                                     </div>
-                                    <span class="text-sm font-bold">78%</span>
+                                    <span class="text-sm font-bold">{{ sentiment.score|int }}%</span>
                                 </div>
                             </div>
                             <div>
                                 <p class="text-xs text-slate-600 mb-1">Confidence</p>
                                 <div class="flex items-center gap-2">
                                     <div class="flex-1 bg-slate-200 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 92%"></div>
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ sentiment.confidence|int }}%"></div>
                                     </div>
-                                    <span class="text-sm font-bold">92%</span>
+                                    <span class="text-sm font-bold">{{ sentiment.confidence|int }}%</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    {% endif %}
 
                     <!-- Recommendation Card -->
+                    {% if recommendation %}
                     <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-6 mb-6">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">AI Recommendation</h3>
                         <div class="mb-4">
-                            <span class="px-4 py-2 rounded-full font-semibold bg-green-600 text-white text-sm">Invest (Strong)</span>
+                            {% if recommendation.recommendation_type == 'invest' %}
+                            <span class="px-4 py-2 rounded-full font-semibold bg-green-600 text-white text-sm">Invest</span>
+                            {% elif recommendation.recommendation_type == 'hold' %}
+                            <span class="px-4 py-2 rounded-full font-semibold bg-yellow-600 text-white text-sm">Hold</span>
+                            {% elif recommendation.recommendation_type == 'wait' %}
+                            <span class="px-4 py-2 rounded-full font-semibold bg-blue-600 text-white text-sm">Wait</span>
+                            {% else %}
+                            <span class="px-4 py-2 rounded-full font-semibold bg-red-600 text-white text-sm">Don't Invest</span>
+                            {% endif %}
                         </div>
                         <div class="space-y-3 mb-4">
                             <div>
                                 <p class="text-sm text-slate-600 mb-1">Risk Level</p>
+                                {% if recommendation.risk_level == 'low' %}
                                 <p class="font-bold text-green-600">Low</p>
+                                {% elif recommendation.risk_level == 'medium' %}
+                                <p class="font-bold text-yellow-600">Medium</p>
+                                {% else %}
+                                <p class="font-bold text-red-600">High</p>
+                                {% endif %}
                             </div>
                             <div>
                                 <p class="text-sm text-slate-600 mb-2">Investment Score</p>
                                 <div class="flex items-center gap-3">
                                     <div class="flex-1 bg-white rounded-full h-3">
-                                        <div class="bg-green-500 h-3 rounded-full" style="width: 82%"></div>
+                                        <div class="{% if recommendation.investment_score >= 70 %}bg-green-500{% elif recommendation.investment_score >= 40 %}bg-yellow-500{% else %}bg-red-500{% endif %} h-3 rounded-full" style="width: {{ recommendation.investment_score|int }}%"></div>
                                     </div>
-                                    <span class="text-lg font-bold">82</span>
+                                    <span class="text-lg font-bold">{{ recommendation.investment_score|int }}</span>
                                 </div>
                             </div>
                         </div>
                         <p class="text-sm text-slate-700">
-                            <strong>Why:</strong> Strong financial performance, positive market sentiment, and solid revenue growth indicate a buy opportunity.
+                            <strong>Why:</strong> {% if recommendation.rationale_summary %}{{ recommendation.rationale_summary }}{% else %}Based on current market analysis, financial performance, and sentiment data.{% endif %}
                         </p>
                     </div>
+                    {% else %}
+                    <div class="bg-slate-100 rounded-xl border border-slate-200 p-6 mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">AI Recommendation</h3>
+                        <p class="text-slate-600">No recommendation available for this company yet.</p>
+                    </div>
+                    {% endif %}
 
                     <!-- Notes Section -->
                     <div class="bg-white rounded-xl border border-slate-200 p-6">
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Personal Notes</h3>
-                        <textarea id="companyNotes" placeholder="Add your personal notes about this company..." class="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 resize-none mb-3" rows="4"></textarea>
-                        <button onclick="saveNotes()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Save Notes</button>
+                        <textarea id="companyNotes" placeholder="Add your personal notes about this company..." class="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 resize-none mb-3" rows="4">{{ existing_notes if existing_notes else '' }}</textarea>
+                        <button onclick="saveNotes()" id="saveNotesBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Save Notes</button>
                     </div>
                 </div>
             </div>
@@ -194,25 +213,159 @@
     <script>
         lucide.createIcons();
 
-        let isBookmarked = false;
+        let isBookmarked = {{ 'true' if is_bookmarked else 'false' }};
 
-        function toggleBookmark() {
-            isBookmarked = !isBookmarked;
+        async function toggleBookmark() {
             const btn = document.getElementById('bookmarkBtn');
-            if (isBookmarked) {
-                btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-blue-600 text-white hover:bg-blue-700';
-                btn.innerHTML = '<i data-lucide="bookmark-check" class="w-5 h-5"></i><span>In Watchlist</span>';
-            } else {
-                btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-slate-100 text-slate-900 hover:bg-slate-200';
-                btn.innerHTML = '<i data-lucide="bookmark" class="w-5 h-5"></i><span>Add to Watchlist</span>';
+            btn.disabled = true;
+
+            try {
+                if (isBookmarked) {
+                    // Remove from watchlist - redirect to watchlist page to handle removal
+                    window.location.href = '/dashboard/watchlist';
+                } else {
+                    // Add to watchlist
+                    const formData = new FormData();
+                    formData.append('company_id', {{ company.company_id }});
+
+                    const response = await fetch('/api/bookmark/add', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok || response.redirected) {
+                        // Update UI
+                        isBookmarked = true;
+                        btn.className = 'flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition bg-blue-600 text-white hover:bg-blue-700';
+                        btn.innerHTML = '<i data-lucide="bookmark-check" class="w-5 h-5"></i><span>In Watchlist</span>';
+                        lucide.createIcons();
+                    } else {
+                        alert('Failed to add to watchlist');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+            } finally {
+                btn.disabled = false;
             }
-            lucide.createIcons();
         }
 
-        function saveNotes() {
+        async function saveNotes() {
             const notes = document.getElementById('companyNotes').value;
-            alert('Notes saved: ' + notes);
+            const btn = document.getElementById('saveNotesBtn');
+            const originalText = btn.textContent;
+
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                const formData = new FormData();
+                formData.append('company_id', {{ company.company_id }});
+                formData.append('notes', notes);
+
+                const response = await fetch('/api/bookmark/update-notes', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    btn.textContent = 'Saved!';
+                    btn.className = 'w-full bg-green-600 text-white py-2 rounded-lg font-semibold';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.className = 'w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition';
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Failed to save notes. Make sure the item is in your watchlist first.');
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while saving notes');
+                btn.textContent = originalText;
+            } finally {
+                btn.disabled = false;
+            }
         }
+
+        // Initialize Price Chart
+        {% if price_history and price_history|length > 0 %}
+        const priceData = {{ price_history[:60]|tojson }};
+        const sortedData = priceData.reverse(); // Oldest to newest
+
+        const ctx = document.getElementById('priceChart');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sortedData.map(p => p.date),
+                datasets: [{
+                    label: 'Close Price ({{ latest_price.currency if latest_price else "USD" }})',
+                    data: sortedData.map(p => p.close_price),
+                    borderColor: 'rgb(37, 99, 235)',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: 'rgb(37, 99, 235)',
+                    pointHoverBorderColor: 'white',
+                    pointHoverBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        callbacks: {
+                            label: function(context) {
+                                return 'Price: ' + context.parsed.y.toFixed(2) + ' {{ latest_price.currency if latest_price else "USD" }}';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxTicksLimit: 10,
+                            color: '#64748b'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            callback: function(value) {
+                                return value.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
     </script>
 </body>
 </html>

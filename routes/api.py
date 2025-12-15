@@ -1,9 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Form
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from db import get_db_dependency, fetch_all, fetch_one, execute, transaction
+from routes.base import get_auth_user
 
 router = APIRouter()
 
@@ -39,7 +41,6 @@ async def api_search(q: str = "", db = Depends(get_db_dependency)):
         (f"%{q}%",)
     )
 
-    # Search assets
     assets = fetch_all(
         db,
         "SELECT asset_id as id, asset_name as name, 'asset' as type, asset_type as details FROM asset WHERE asset_name LIKE %s LIMIT 20",
@@ -112,12 +113,37 @@ async def get_company_recommendation(company_id: int, db = Depends(get_db_depend
 
 
 @router.post("/bookmark/add")
-async def add_bookmark(bookmark: BookmarkRequest, db = Depends(get_db_dependency)):
+async def add_bookmark(
+    company_id: Optional[int] = Form(None),
+    asset_id: Optional[int] = Form(None),
+    notes: Optional[str] = Form(None),
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
     """Add company or asset to user's watchlist"""
-    user_id = 1  # Placeholder
+    if isinstance(user, RedirectResponse):
+        return user
 
-    if not bookmark.company_id and not bookmark.asset_id:
+    user_id = user.get("user_id")
+
+    if not company_id and not asset_id:
         raise HTTPException(status_code=400, detail="Must provide either company_id or asset_id")
+
+    if company_id:
+        existing = fetch_one(
+            db,
+            "SELECT bookmark_id FROM bookmark WHERE user_id = %s AND company_id = %s",
+            (user_id, company_id)
+        )
+    else:
+        existing = fetch_one(
+            db,
+            "SELECT bookmark_id FROM bookmark WHERE user_id = %s AND asset_id = %s",
+            (user_id, asset_id)
+        )
+
+    if existing:
+        return RedirectResponse(url="/dashboard/watchlist?msg=already_added", status_code=303)
 
     with transaction(db):
         bookmark_id = execute(
@@ -126,16 +152,23 @@ async def add_bookmark(bookmark: BookmarkRequest, db = Depends(get_db_dependency
             INSERT INTO bookmark (user_id, company_id, asset_id, notes)
             VALUES (%s, %s, %s, %s)
             """,
-            (user_id, bookmark.company_id, bookmark.asset_id, bookmark.notes)
+            (user_id, company_id, asset_id, notes)
         )
 
-    return {"bookmark_id": bookmark_id, "message": "Added to watchlist"}
+    return RedirectResponse(url="/dashboard/watchlist?msg=added", status_code=303)
 
 
 @router.post("/bookmark/remove")
-async def remove_bookmark(bookmark_id: int, db = Depends(get_db_dependency)):
+async def remove_bookmark(
+    bookmark_id: int = Form(...),
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
     """Remove bookmark from user's watchlist"""
-    user_id = 1  # Placeholder
+    if isinstance(user, RedirectResponse):
+        return user
+
+    user_id = user.get("user_id")
 
     with transaction(db):
         rows_affected = execute(
@@ -147,4 +180,48 @@ async def remove_bookmark(bookmark_id: int, db = Depends(get_db_dependency)):
     if rows_affected == 0:
         raise HTTPException(status_code=404, detail="Bookmark not found")
 
-    return {"message": "Removed from watchlist"}
+    return RedirectResponse(url="/dashboard/watchlist", status_code=303)
+
+
+@router.post("/bookmark/update-notes")
+async def update_bookmark_notes(
+    company_id: Optional[int] = Form(None),
+    asset_id: Optional[int] = Form(None),
+    notes: str = Form(...),
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
+    """Update notes for a bookmark"""
+    if isinstance(user, RedirectResponse):
+        return user
+
+    user_id = user.get("user_id")
+
+    if not company_id and not asset_id:
+        raise HTTPException(status_code=400, detail="Must provide either company_id or asset_id")
+
+    if company_id:
+        bookmark = fetch_one(
+            db,
+            "SELECT bookmark_id FROM bookmark WHERE user_id = %s AND company_id = %s",
+            (user_id, company_id)
+        )
+    else:
+        bookmark = fetch_one(
+            db,
+            "SELECT bookmark_id FROM bookmark WHERE user_id = %s AND asset_id = %s",
+            (user_id, asset_id)
+        )
+
+    if not bookmark:
+        raise HTTPException(status_code=404, detail="Bookmark not found. Please add to watchlist first.")
+
+    # Update notes
+    with transaction(db):
+        execute(
+            db,
+            "UPDATE bookmark SET notes = %s WHERE bookmark_id = %s",
+            (notes, bookmark["bookmark_id"])
+        )
+
+    return {"success": True, "message": "Notes updated successfully"}

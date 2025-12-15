@@ -1,9 +1,3 @@
-"""
-Centralized AI Prompts
-ALL AI prompts MUST be defined here and referenced by key.
-NO hard-coded prompts in provider classes or tasks.
-"""
-
 # Sentiment Classification Prompt
 PROMPT_SENTIMENT_CLASSIFICATION = """
 You are a financial sentiment analysis expert. Analyze the following text and determine its sentiment.

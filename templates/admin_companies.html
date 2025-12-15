@@ -233,6 +233,8 @@
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Company Name</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Type</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Industry</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Symbol</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Exchange</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Market Cap</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Founded</th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-slate-900">Actions</th>
@@ -267,6 +269,16 @@
                                 </td>
                                 <td class="px-6 py-4 text-slate-600">{{ company.industry or 'N/A' }}</td>
                                 <td class="px-6 py-4 text-slate-600">
+                                    {% if company.stock_symbol %}
+                                    <span class="px-2 py-1 rounded bg-blue-50 text-blue-700 text-xs font-mono font-semibold">
+                                        {{ company.stock_symbol }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-slate-400">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-slate-600">{{ company.stock_exchange or '-' }}</td>
+                                <td class="px-6 py-4 text-slate-600">
                                     {% if company.market_cap %}
                                         ${{ '{:,.0f}'.format(company.market_cap) }}
                                     {% else %}
@@ -278,6 +290,9 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex gap-2">
+                                        <a href="/admin/companies/{{ company.company_id }}/detail" class="text-green-600 hover:text-green-700" title="View Detail">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </a>
                                         <a href="/admin/companies/edit/{{ company.company_id }}" class="text-blue-600 hover:text-blue-700" title="Edit">
                                             <i data-lucide="edit" class="w-4 h-4"></i>
                                         </a>
@@ -290,7 +305,7 @@
                             {% endfor %}
                             {% if not companies %}
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-slate-500">
+                                <td colspan="9" class="px-6 py-12 text-center text-slate-500">
                                     No companies found
                                 </td>
                             </tr>

@@ -18,7 +18,7 @@
             <!-- Welcome Section -->
             <div class="mb-12">
                 <h1 class="text-4xl font-bold text-slate-900 mb-2">
-                    Welcome back, John Doe!
+                    Welcome back, {{ user_name }}!
                 </h1>
                 <p class="text-slate-600">
                     Here's your investment dashboard with personalized insights
@@ -31,7 +31,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-slate-600 text-sm mb-1">Companies Watched</p>
-                            <p class="text-3xl font-bold text-slate-900">12</p>
+                            <p class="text-3xl font-bold text-slate-900">{{ companies_count }}</p>
                         </div>
                         <i data-lucide="bookmark" class="w-10 h-10 text-blue-600 opacity-80"></i>
                     </div>
@@ -41,7 +41,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-slate-600 text-sm mb-1">Assets Tracked</p>
-                            <p class="text-3xl font-bold text-slate-900">5</p>
+                            <p class="text-3xl font-bold text-slate-900">{{ assets_count }}</p>
                         </div>
                         <i data-lucide="trending-up" class="w-10 h-10 text-green-600 opacity-80"></i>
                     </div>
@@ -50,8 +50,8 @@
                 <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-slate-600 text-sm mb-1">Portfolio Value</p>
-                            <p class="text-3xl font-bold text-slate-900">$125,430</p>
+                            <p class="text-slate-600 text-sm mb-1">Total Tracked</p>
+                            <p class="text-3xl font-bold text-slate-900">{{ companies_count + assets_count }}</p>
                         </div>
                         <i data-lucide="target" class="w-10 h-10 text-purple-600 opacity-80"></i>
                     </div>
@@ -75,96 +75,60 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- loop: recommendations -->
-                            <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
-                                <td class="px-6 py-4">
-                                    <a href="/dashboard/company?id=1" class="font-semibold text-slate-900 hover:text-blue-600 transition">
-                                        Apple Inc.
-                                    </a>
-                                </td>
-                                <td class="px-6 py-4 text-slate-600">Company</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
-                                        Invest
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 font-medium text-green-600">Low</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-16 bg-slate-200 rounded-full h-2">
-                                            <div class="h-2 rounded-full bg-green-500" style="width: 78%"></div>
+                            {% if recent_recommendations %}
+                                {% for rec in recent_recommendations %}
+                                <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
+                                    <td class="px-6 py-4">
+                                        {% if rec.type == 'company' %}
+                                        <a href="/company/{{ rec.company_id }}" class="font-semibold text-slate-900 hover:text-blue-600 transition">
+                                            {{ rec.company_name }}
+                                        </a>
+                                        {% else %}
+                                        <a href="/asset/{{ rec.asset_id }}" class="font-semibold text-slate-900 hover:text-blue-600 transition">
+                                            {{ rec.asset_name }}
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-600">{{ rec.type|title }}</td>
+                                    <td class="px-6 py-4">
+                                        {% if rec.recommendation_type == 'invest' %}
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                                            Invest
+                                        </span>
+                                        {% elif rec.recommendation_type == 'hold' %}
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">
+                                            Hold
+                                        </span>
+                                        {% elif rec.recommendation_type == 'dont_invest' %}
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700">
+                                            Don't Invest
+                                        </span>
+                                        {% else %}
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+                                            {{ rec.recommendation_type|title }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 font-medium {% if rec.risk_level == 'low' %}text-green-600{% elif rec.risk_level == 'medium' %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                        {{ rec.risk_level|title }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-16 bg-slate-200 rounded-full h-2">
+                                                <div class="h-2 rounded-full {% if rec.investment_score >= 70 %}bg-green-500{% elif rec.investment_score >= 40 %}bg-yellow-500{% else %}bg-red-500{% endif %}" style="width: {{ rec.investment_score }}%"></div>
+                                            </div>
+                                            <span class="text-sm font-semibold text-slate-900">{{ rec.investment_score|round|int }}</span>
                                         </div>
-                                        <span class="text-sm font-semibold text-slate-900">78</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
-                                <td class="px-6 py-4">
-                                    <a href="/dashboard/company?id=2" class="font-semibold text-slate-900 hover:text-blue-600 transition">
-                                        Tesla Inc.
-                                    </a>
-                                </td>
-                                <td class="px-6 py-4 text-slate-600">Company</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">
-                                        Hold
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 font-medium text-yellow-600">Medium</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-16 bg-slate-200 rounded-full h-2">
-                                            <div class="h-2 rounded-full bg-yellow-500" style="width: 55%"></div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-slate-900">55</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
-                                <td class="px-6 py-4">
-                                    <a href="/dashboard/asset?id=3" class="font-semibold text-slate-900 hover:text-blue-600 transition">
-                                        Gold
-                                    </a>
-                                </td>
-                                <td class="px-6 py-4 text-slate-600">Asset</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
-                                        Invest
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 font-medium text-green-600">Low</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-16 bg-slate-200 rounded-full h-2">
-                                            <div class="h-2 rounded-full bg-green-500" style="width: 72%"></div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-slate-900">72</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
-                                <td class="px-6 py-4">
-                                    <a href="/dashboard/company?id=4" class="font-semibold text-slate-900 hover:text-blue-600 transition">
-                                        Meta Platforms
-                                    </a>
-                                </td>
-                                <td class="px-6 py-4 text-slate-600">Company</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700">
-                                        Don't Invest
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 font-medium text-red-600">High</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-16 bg-slate-200 rounded-full h-2">
-                                            <div class="h-2 rounded-full bg-red-500" style="width: 38%"></div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-slate-900">38</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <!-- /loop: recommendations -->
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="px-6 py-8 text-center text-slate-600">
+                                        No recommendations available yet. Start by searching for companies or assets!
+                                    </td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>

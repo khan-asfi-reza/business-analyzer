@@ -2,14 +2,15 @@
 Company service - Company data business logic
 """
 from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
+import humanize
 
 from db import fetch_one, fetch_all
+from utils.helpers import humanize_date
 
 
 def get_company_by_id(db, company_id: int) -> Optional[Dict[str, Any]]:
     """Get company details by ID"""
-    return fetch_one(
+    data = fetch_one(
         db,
         """
         SELECT company_id, company_name, company_type, industry,
@@ -19,6 +20,11 @@ def get_company_by_id(db, company_id: int) -> Optional[Dict[str, Any]]:
         """,
         (company_id,)
     )
+    if data and data["market_cap"]:
+        data["market_cap"] = humanize.intword(data["market_cap"])
+
+    return data
+
 
 
 def search_companies(db, query: str, limit: int = 20) -> List[Dict[str, Any]]:
@@ -52,7 +58,7 @@ def get_latest_stock_price(db, company_id: int) -> Optional[Dict[str, Any]]:
 
 def get_stock_prices(db, company_id: int, days: int = 60) -> List[Dict[str, Any]]:
     """Get stock price history for specified number of days"""
-    return fetch_all(
+    data = fetch_all(
         db,
         """
         SELECT date, open_price, close_price, high_price, low_price, volume, currency
@@ -62,6 +68,13 @@ def get_stock_prices(db, company_id: int, days: int = 60) -> List[Dict[str, Any]
         """,
         (company_id, days)
     )
+    for item in data:
+        item["date"] = humanize_date(item["date"])
+        for key in ["open_price","close_price", "high_price", "low_price"]:
+            item[key] = float(item[key])
+    return data
+
+
 
 
 def get_latest_financial_statement(db, company_id: int) -> Optional[Dict[str, Any]]:
