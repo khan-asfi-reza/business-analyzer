@@ -22,7 +22,7 @@
 
 
 INSERT INTO user (username, email, password_hash, full_name, registration_date, role) VALUES
-('admin1', 'admin@businessanalyzer.com', '$$2b$12$C2lk6piXC1RhPWj8xrAKWOYF2xEeoo2WUTiF5tQQMBbU4PpCJqFkG', 'Admin User', '2024-01-01', 'Admin'),
+('admin1', 'admin@businessanalyzer.com', '$2b$12$C2lk6piXC1RhPWj8xrAKWOYF2xEeoo2WUTiF5tQQMBbU4PpCJqFkG', 'Admin User', '2024-01-01', 'Admin'),
 ('khansaad', 'khansaad@gmail.com', '$2b$12$C2lk6piXC1RhPWj8xrAKWOYF2xEeoo2WUTiF5tQQMBbU4PpCJqFkG', 'John Doe', '2024-01-15', 'Customer'),
 ('sadik', 'sadik@example.com', '$2b$12$C2lk6piXC1RhPWj8xrAKWOYF2xEeoo2WUTiF5tQQMBbU4PpCJqFkG', 'Jane Doe', '2024-02-01', 'Customer'),
 ('moderator1', 'mod@businessanalyzer.com', '$2b$12$C2lk6piXC1RhPWj8xrAKWOYF2xEeoo2WUTiF5tQQMBbU4PpCJqFkG', 'Moderator One', '2024-01-10', 'Moderator');
@@ -316,7 +316,6 @@ INSERT INTO asset (asset_id, asset_name, asset_type, unit_of_measurement, descri
 (2, 'Silver', 'precious_metal', 'troy_ounce', 'Silver is a precious metal used in industry, jewelry, and as an investment.', 'https://images.unsplash.com/photo-1609690179652-a3f9c441c0f0?w=200&q=80'),
 (3, 'Crude Oil (WTI)', 'commodity', 'barrel', 'West Texas Intermediate crude oil, a benchmark for oil prices.', 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=200&q=80'),
 (4, 'Natural Gas', 'commodity', 'MMBtu', 'Natural gas is a fossil fuel used for heating and electricity generation.', 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=200&q=80'),
-(5, 'Bitcoin (BTC)', 'cryptocurrency', 'BTC', 'Bitcoin is the first and largest cryptocurrency by market capitalization.', 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=200&q=80'),
 (6, 'Platinum', 'precious_metal', 'troy_ounce', 'Platinum is a rare precious metal used in catalytic converters and jewelry.', 'https://images.unsplash.com/photo-1611652022419-a9419f74343f?w=200&q=80');
 
 -- =====================

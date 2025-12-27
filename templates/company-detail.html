@@ -7,7 +7,71 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="/assets/css/main.css">
+    <style>
+        /* Markdown styling for chatbot messages */
+        .chat-markdown p {
+            margin-bottom: 0.5rem;
+        }
+        .chat-markdown p:last-child {
+            margin-bottom: 0;
+        }
+        .chat-markdown ul, .chat-markdown ol {
+            margin-left: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .chat-markdown li {
+            margin-bottom: 0.25rem;
+        }
+        .chat-markdown strong {
+            font-weight: 600;
+        }
+        .chat-markdown em {
+            font-style: italic;
+        }
+        .chat-markdown code {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+            font-family: monospace;
+        }
+        .chat-markdown pre {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 0.5rem;
+        }
+        .chat-markdown pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        .chat-markdown h1, .chat-markdown h2, .chat-markdown h3 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .chat-markdown h1 {
+            font-size: 1.125rem;
+        }
+        .chat-markdown h2 {
+            font-size: 1rem;
+        }
+        .chat-markdown h3 {
+            font-size: 0.875rem;
+        }
+        .chat-markdown a {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        .chat-markdown blockquote {
+            border-left: 3px solid #e2e8f0;
+            padding-left: 0.75rem;
+            margin-left: 0;
+            color: #64748b;
+        }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
     <!-- Navigation -->
@@ -204,6 +268,48 @@
                 </div>
             </div>
         </div>
+
+        <!-- Chatbot Floating Button -->
+        <button id="chatbotToggle" class="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 transition z-40">
+            <i data-lucide="message-circle" class="w-6 h-6"></i>
+        </button>
+
+        <!-- Chatbot Window -->
+        <div id="chatbotWindow" class="fixed bottom-24 right-6 w-96 bg-white rounded-xl shadow-2xl border border-slate-200 transform translate-y-full opacity-0 transition-all duration-300 z-40 hidden">
+            <!-- Chat Header -->
+            <div class="bg-blue-600 text-white p-4 rounded-t-xl flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="bot" class="w-5 h-5"></i>
+                    <h3 class="font-bold">AI Investment Assistant</h3>
+                </div>
+                <button id="chatbotClose" class="text-white hover:bg-blue-700 rounded p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chatMessages" class="h-96 overflow-y-auto p-4 space-y-4">
+                <!-- Welcome Message -->
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4 text-blue-600"></i>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-3 max-w-xs">
+                        <p class="text-sm text-slate-900">Hi! I'm your AI investment assistant. Ask me anything about {{ company.company_name }}!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="border-t border-slate-200 p-4">
+                <div class="flex gap-2">
+                    <input type="text" id="chatInput" placeholder="Ask about this company..." class="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 text-sm" />
+                    <button id="chatSend" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Footer -->
@@ -366,6 +472,195 @@
             }
         });
         {% endif %}
+
+        // Chatbot functionality
+        let chatSessionId = localStorage.getItem('chatSession_{{ company.company_id }}') || null;
+        let chatHistoryLoaded = false;
+        const chatbotToggle = document.getElementById('chatbotToggle');
+        const chatbotWindow = document.getElementById('chatbotWindow');
+        const chatbotClose = document.getElementById('chatbotClose');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // Configure marked.js
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            mangle: false
+        });
+
+        async function loadChatHistory() {
+            if (chatHistoryLoaded) return;
+
+            try {
+                const url = chatSessionId
+                    ? `/api/company/{{ company.company_id }}/chat/history?session_id=${chatSessionId}`
+                    : `/api/company/{{ company.company_id }}/chat/history`;
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    console.error('Failed to load chat history');
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Clear welcome message if we have history
+                if (data.history && data.history.length > 0) {
+                    chatMessages.innerHTML = '';
+
+                    // Display chat history
+                    data.history.forEach(msg => {
+                        addMessage(msg.message_text, msg.is_user_message);
+                    });
+                }
+
+                chatHistoryLoaded = true;
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+            }
+        }
+
+        async function toggleChatbot() {
+            const isHidden = chatbotWindow.classList.contains('hidden');
+
+            if (isHidden) {
+                chatbotWindow.classList.remove('hidden');
+                setTimeout(() => {
+                    chatbotWindow.classList.remove('translate-y-full', 'opacity-0');
+                }, 10);
+
+                // Load chat history when opening
+                await loadChatHistory();
+            } else {
+                chatbotWindow.classList.add('translate-y-full', 'opacity-0');
+                setTimeout(() => {
+                    chatbotWindow.classList.add('hidden');
+                }, 300);
+            }
+
+            lucide.createIcons();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-3 ' + (isUser ? 'justify-end' : '');
+
+            if (!isUser) {
+                const renderedMarkdown = marked.parse(text);
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4 text-blue-600"></i>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-3 max-w-xs">
+                        <div class="text-sm text-slate-900 chat-markdown">${renderedMarkdown}</div>
+                    </div>
+                `;
+            } else {
+                const escapedText = escapeHtml(text);
+                messageDiv.innerHTML = `
+                    <div class="bg-blue-600 rounded-lg p-3 max-w-xs">
+                        <p class="text-sm text-white">${escapedText}</p>
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            lucide.createIcons();
+        }
+
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'flex gap-3';
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="bot" class="w-4 h-4 text-blue-600"></i>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-3">
+                    <div class="flex gap-1">
+                        <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            lucide.createIcons();
+        }
+
+        function removeTypingIndicator() {
+            const typingDiv = document.getElementById('typingIndicator');
+            if (typingDiv) {
+                typingDiv.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            chatInput.value = '';
+            chatSend.disabled = true;
+            chatInput.disabled = true;
+
+            addTypingIndicator();
+
+            try {
+                const response = await fetch(`/api/company/{{ company.company_id }}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: chatSessionId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get response');
+                }
+
+                const data = await response.json();
+                removeTypingIndicator();
+
+                chatSessionId = data.session_id;
+                localStorage.setItem('chatSession_{{ company.company_id }}', chatSessionId);
+                addMessage(data.answer, false);
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator();
+                addMessage('Sorry, I encountered an error. Please try again.', false);
+            } finally {
+                chatSend.disabled = false;
+                chatInput.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        chatbotToggle.addEventListener('click', toggleChatbot);
+        chatbotClose.addEventListener('click', toggleChatbot);
+        chatSend.addEventListener('click', sendMessage);
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>

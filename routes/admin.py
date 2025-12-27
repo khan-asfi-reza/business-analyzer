@@ -5,6 +5,7 @@ from fastapi import Depends, Form, APIRouter
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse
 from tasks.stock_data import fetch_stock_prices
+from tasks.recommendations import update_single_company
 from db import get_db_dependency, fetch_one, fetch_all, transaction, execute
 from routes.base import templates, get_auth_user
 
@@ -770,13 +771,14 @@ async def admin_company_fetch_prices(
 
 
     ticker_symbol = company['stock_symbol']
-    fetch_stock_prices.apply_async(
+    print(ticker_symbol)
+    print(fetch_stock_prices.apply_async(
         kwargs=dict(
             company_id=company_id,
             ticker_symbol=ticker_symbol,
             days=60,
         )
-    )
+    ))
 
 
     return RedirectResponse(
@@ -801,7 +803,6 @@ async def admin_company_run_recommendation(
     if user.get("role") != "Admin":
         return RedirectResponse(url="/admin", status_code=303)
 
-    from tasks.recommendations import update_single_company
     update_single_company.apply_async(kwargs=dict(company_id=company_id))
 
     return RedirectResponse(

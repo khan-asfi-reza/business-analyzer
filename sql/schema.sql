@@ -25,7 +25,7 @@ CREATE TABLE company (
     logo_url VARCHAR(512),
     founded_date DATE,
     description TEXT,
-    market_cap DECIMAL(20, 2),
+    market_cap DOUBLE,
     stock_symbol VARCHAR(20),
     stock_exchange VARCHAR(100),
     INDEX idx_company_name (company_name),
@@ -38,10 +38,10 @@ CREATE TABLE stock_price (
     price_id INT AUTO_INCREMENT PRIMARY KEY,
     company_id INT NOT NULL,
     date DATE NOT NULL,
-    open_price DECIMAL(15, 4) NOT NULL,
-    close_price DECIMAL(15, 4) NOT NULL,
-    high_price DECIMAL(15, 4) NOT NULL,
-    low_price DECIMAL(15, 4) NOT NULL,
+    open_price DOUBLE NOT NULL,
+    close_price DOUBLE NOT NULL,
+    high_price DOUBLE NOT NULL,
+    low_price DOUBLE NOT NULL,
     volume BIGINT NOT NULL DEFAULT 0,
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE,
@@ -57,8 +57,8 @@ CREATE TABLE financial_statement (
     period_start_date DATE NOT NULL,
     period_end_date DATE NOT NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
-    revenue DECIMAL(20, 2) NOT NULL,
-    profit DECIMAL(20, 2) NOT NULL,
+    revenue DOUBLE NOT NULL,
+    profit DOUBLE NOT NULL,
     FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE,
     INDEX idx_company_period (company_id, period_end_date DESC),
     INDEX idx_statement_type (statement_type)
@@ -80,7 +80,7 @@ CREATE TABLE asset_price (
     asset_price_id INT AUTO_INCREMENT PRIMARY KEY,
     asset_id INT NOT NULL,
     date DATE NOT NULL,
-    price DECIMAL(15, 4) NOT NULL,
+    price DOUBLE NOT NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     FOREIGN KEY (asset_id) REFERENCES asset(asset_id) ON DELETE CASCADE,
     UNIQUE KEY unique_asset_date (asset_id, date),
@@ -111,9 +111,9 @@ CREATE TABLE scraped_content (
 CREATE TABLE sentiment_analysis (
     sentiment_id INT AUTO_INCREMENT PRIMARY KEY,
     content_id INT NOT NULL UNIQUE,
-    sentiment_score DECIMAL(3, 2) NOT NULL CHECK (sentiment_score >= -1.0 AND sentiment_score <= 1.0),
+    sentiment_score DOUBLE NOT NULL CHECK (sentiment_score >= -1.0 AND sentiment_score <= 1.0),
     sentiment_label ENUM('positive', 'negative', 'neutral') NOT NULL,
-    confidence_level DECIMAL(3, 2) NOT NULL CHECK (confidence_level >= 0.0 AND confidence_level <= 1.0),
+    confidence_level DOUBLE NOT NULL CHECK (confidence_level >= 0.0 AND confidence_level <= 1.0),
     analysis_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (content_id) REFERENCES scraped_content(content_id) ON DELETE CASCADE,
     INDEX idx_sentiment_label (sentiment_label),
@@ -128,9 +128,9 @@ CREATE TABLE investment_recommendation (
     asset_id INT NULL,
     recommendation_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     recommendation_type ENUM('invest', 'dont_invest', 'hold', 'wait') NOT NULL,
-    investment_score DECIMAL(5, 2) NOT NULL CHECK (investment_score >= 0 AND investment_score <= 100),
+    investment_score DOUBLE NOT NULL CHECK (investment_score >= 0 AND investment_score <= 100),
     risk_level ENUM('low', 'medium', 'high') NOT NULL,
-    expected_return DECIMAL(5, 2),
+    expected_return DOUBLE,
     rationale_summary TEXT,
     FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE,
     FOREIGN KEY (asset_id) REFERENCES asset(asset_id) ON DELETE CASCADE,
@@ -158,3 +158,21 @@ CREATE TABLE bookmark (
     INDEX idx_user_id (user_id),
     INDEX idx_bookmark_date (bookmark_date DESC)
 );
+
+CREATE TABLE IF NOT EXISTS chat_message (
+    chat_message_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    company_id INT NOT NULL,
+    conversation_session_id VARCHAR(36) NOT NULL,
+    message_text TEXT NOT NULL,
+    is_user_message BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE,
+
+    INDEX idx_user_company (user_id, company_id),
+    INDEX idx_session (conversation_session_id),
+    INDEX idx_created_at (created_at)
+)
+

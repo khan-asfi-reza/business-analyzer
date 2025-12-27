@@ -6,6 +6,13 @@ from pydantic import BaseModel
 
 from db import get_db_dependency, fetch_all, fetch_one, execute, transaction
 from routes.base import get_auth_user
+from services.chatbot_service import (
+    get_company_context,
+    save_chat_message,
+    get_chat_history,
+    create_session_id
+)
+from ai import answer_company_question
 
 router = APIRouter()
 
@@ -225,3 +232,88 @@ async def update_bookmark_notes(
         )
 
     return {"success": True, "message": "Notes updated successfully"}
+
+
+class ChatRequest(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+
+@router.post("/company/{company_id}/chat")
+async def chat_with_company(
+    company_id: int,
+    chat_request: ChatRequest,
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
+    """Send a message to the AI chatbot about a company"""
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    user_id = user.get("user_id")
+
+    company_context = get_company_context(db, company_id)
+    if not company_context:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    session_id = chat_request.session_id or create_session_id()
+
+    with transaction(db):
+        save_chat_message(
+            db,
+            user_id=user_id,
+            company_id=company_id,
+            session_id=session_id,
+            message_text=chat_request.message,
+            is_user_message=True
+        )
+
+    ai_response = answer_company_question(
+        company_context=company_context,
+        user_question=chat_request.message
+    )
+
+    if ai_response.get("error"):
+        raise HTTPException(status_code=500, detail=ai_response["error"])
+
+    answer = ai_response["answer"]
+
+    with transaction(db):
+        save_chat_message(
+            db,
+            user_id=user_id,
+            company_id=company_id,
+            session_id=session_id,
+            message_text=answer,
+            is_user_message=False
+        )
+
+    return {
+        "answer": answer,
+        "session_id": session_id
+    }
+
+
+@router.get("/company/{company_id}/chat/history")
+async def get_company_chat_history(
+    company_id: int,
+    session_id: Optional[str] = None,
+    limit: int = 50,
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
+    """Get chat history for a company"""
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    user_id = user.get("user_id")
+
+    history = get_chat_history(
+        db,
+        user_id=user_id,
+        company_id=company_id,
+        session_id=session_id,
+        limit=limit
+    )
+
+    return {"history": history}
