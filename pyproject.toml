@@ -24,8 +24,6 @@ dependencies = [
     # Stock Data
     "yfinance>=0.2.0",
     # AI/ML
-    "transformers>=4.30.0",
-    "torch>=2.0.0",
     "openai>=1.0.0",
     "google-genai>=0.2.0",
     # Template Rendering

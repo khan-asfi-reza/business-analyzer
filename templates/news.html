@@ -73,10 +73,47 @@
                 {% endif %}
             </div>
 
-            <!-- Load More -->
-            {% if has_more %}
-            <div class="text-center mt-12">
-                <a href="/dashboard/news?page={{ page + 1 }}{% if sentiment_filter %}&sentiment={{ sentiment_filter }}{% endif %}" class="px-8 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition inline-block">Load More Articles</a>
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <div class="flex justify-center items-center gap-2 mt-12 flex-wrap">
+                <!-- Previous Button -->
+                {% if page > 1 %}
+                <a href="/dashboard/news?page={{ page - 1 }}{% if sentiment_filter %}&sentiment={{ sentiment_filter }}{% endif %}" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium">
+                    <i data-lucide="chevron-left" class="w-4 h-4 inline"></i>
+                    Previous
+                </a>
+                {% else %}
+                <span class="px-4 py-2 border border-slate-200 text-slate-400 rounded-lg cursor-not-allowed font-medium">
+                    <i data-lucide="chevron-left" class="w-4 h-4 inline"></i>
+                    Previous
+                </span>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                <div class="flex gap-2 flex-wrap">
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == page %}
+                        <span class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">{{ p }}</span>
+                        {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                        <a href="/dashboard/news?page={{ p }}{% if sentiment_filter %}&sentiment={{ sentiment_filter }}{% endif %}" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium">{{ p }}</a>
+                        {% elif p == page - 3 or p == page + 3 %}
+                        <span class="px-4 py-2 text-slate-400">...</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Next Button -->
+                {% if page < total_pages %}
+                <a href="/dashboard/news?page={{ page + 1 }}{% if sentiment_filter %}&sentiment={{ sentiment_filter }}{% endif %}" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium">
+                    Next
+                    <i data-lucide="chevron-right" class="w-4 h-4 inline"></i>
+                </a>
+                {% else %}
+                <span class="px-4 py-2 border border-slate-200 text-slate-400 rounded-lg cursor-not-allowed font-medium">
+                    Next
+                    <i data-lucide="chevron-right" class="w-4 h-4 inline"></i>
+                </span>
+                {% endif %}
             </div>
             {% endif %}
         </div>
