@@ -310,14 +310,41 @@ async def watchlist(request: Request, db = Depends(get_db_dependency), user = De
 
 
 @router.get("/news", response_class=HTMLResponse)
-async def news(request: Request, db = Depends(get_db_dependency), user = Depends(get_auth_user)):
-    """Scraped content with sentiment"""
-    
+async def news(
+    request: Request,
+    sentiment: str = "",
+    page: int = 1,
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
+    """Scraped content with sentiment, filtering and pagination"""
+
     if isinstance(user, RedirectResponse):
         return user
-    news_items = fetch_all(
-        db,
-        """
+
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    where_clauses = []
+    params = []
+
+    if sentiment and sentiment != "all":
+        where_clauses.append("sa.sentiment_label = %s")
+        params.append(sentiment)
+
+    where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+
+    count_query = f"""
+        SELECT COUNT(*) as count
+        FROM scraped_content sc
+        LEFT JOIN sentiment_analysis sa ON sc.content_id = sa.content_id
+        {where_sql}
+    """
+    total_items = fetch_one(db, count_query, tuple(params))['count']
+    total_pages = (total_items + per_page - 1) // per_page
+    has_more = page < total_pages
+
+    query = f"""
         SELECT
             sc.content_id, sc.title, sc.source_name, sc.content_type,
             sc.publish_date, sc.scraped_date, sc.source_url,
@@ -325,15 +352,24 @@ async def news(request: Request, db = Depends(get_db_dependency), user = Depends
             sa.sentiment_label, sa.sentiment_score, sa.confidence_level
         FROM scraped_content sc
         LEFT JOIN sentiment_analysis sa ON sc.content_id = sa.content_id
+        {where_sql}
         ORDER BY sc.publish_date DESC
-        LIMIT 50
-        """,
-        ()
-    )
+        LIMIT %s OFFSET %s
+    """
+    params.extend([per_page, offset])
+    news_items = fetch_all(db, query, tuple(params))
 
     return templates.TemplateResponse(
         "news.html",
-        {"request": request, "user": user, "news_items": news_items}
+        {
+            "request": request,
+            "user": user,
+            "news_items": news_items,
+            "sentiment_filter": sentiment,
+            "page": page,
+            "total_pages": total_pages,
+            "has_more": has_more
+        }
     )
 
 

@@ -8,6 +8,7 @@ from tasks.stock_data import fetch_stock_prices
 from tasks.recommendations import update_single_company
 from db import get_db_dependency, fetch_one, fetch_all, transaction, execute
 from routes.base import templates, get_auth_user
+from tasks.scraping import scrape_sources, scrape_company_news
 
 router = APIRouter()
 
@@ -334,8 +335,22 @@ async def admin_content(request: Request, db = Depends(get_db_dependency), user 
 
     return templates.TemplateResponse(
         "admin_content.html",
-        {"request": request, "user": user, "content_items": content_items}
+        {"request": request, "user": user, "content": content_items}
     )
+
+
+@router.post("/content/scrape")
+async def admin_trigger_scrape(request: Request, db = Depends(get_db_dependency), user = Depends(get_auth_user)):
+    """Trigger manual content scraping"""
+    if isinstance(user, RedirectResponse):
+        return user
+
+    if user.get("role") != "Admin":
+        return RedirectResponse(url="/admin", status_code=303)
+
+    scrape_sources.apply_async()
+
+    return RedirectResponse(url="/admin/content?success=Content scraping started", status_code=303)
 
 
 @router.get("/users/add", response_class=HTMLResponse)
@@ -807,5 +822,37 @@ async def admin_company_run_recommendation(
 
     return RedirectResponse(
         url=f"/admin/companies/{company_id}/detail?success=Recommendation generation started",
+        status_code=303
+    )
+
+
+@router.post("/companies/{company_id}/scrape-news")
+async def admin_company_scrape_news(
+    request: Request,
+    company_id: int,
+    db = Depends(get_db_dependency),
+    user = Depends(get_auth_user)
+):
+    """
+    Trigger news scraping for a specific company
+    """
+    if isinstance(user, RedirectResponse):
+        return user
+
+    if user.get("role") != "Admin":
+        return RedirectResponse(url="/admin", status_code=303)
+
+    company = fetch_one(db, "SELECT company_name FROM company WHERE company_id = %s", (company_id,))
+
+    if not company:
+        return RedirectResponse(
+            url=f"/admin/companies?error=Company not found",
+            status_code=303
+        )
+
+    scrape_company_news.apply_async(kwargs=dict(company_id=company_id, company_name=company['company_name']))
+
+    return RedirectResponse(
+        url=f"/admin/companies/{company_id}/detail?success=News scraping started for {company['company_name']}",
         status_code=303
     )
